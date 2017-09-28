@@ -3,7 +3,12 @@
     "env"
   ],
   "plugins": [
-    "transform-runtime",
+    [
+      "transform-runtime",
+      {
+        "polyfill": false
+      }
+    ],
     "transform-decorators-legacy",
     "lodash"
   ],
