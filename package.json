@@ -1,19 +1,29 @@
 {
   "name": "axios-extensions",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "make axios great again",
   "homepage": "https://github.com/kuitos/axios-extensions",
-  "main": "./index.js",
+  "author": "kuitos",
+  "keywords": [
+    "axios",
+    "cache",
+    "extensions",
+    "adapter"
+  ],
+  "main": "./lib/index.js",
+  "module": "./esm/index.js",
   "scripts": {
-    "build": "rm -fr lib && NODE_ENV=production babel ./src --out-dir lib --ignore **/__tests__,node_modules && cp package.json lib/package.json && cp README.md lib/README.md",
+    "build": "npm run build:cjs && npm run build:esm && cp package.json dist/package.json && cp README.md dist/README.md",
+    "build:cjs": "rm -fr dist/lib && NODE_ENV=cjs babel ./src --out-dir dist/lib --ignore **/__tests__,node_modules",
+    "build:esm": "rm -fr dist/esm && NODE_ENV=esm babel ./src --out-dir dist/esm --ignore **/__tests__,node_modules",
     "start": "NODE_ENV=test ava -w",
-    "pub": "npm run lint && npm run build && npm publish lib",
+    "pub": "npm run lint && npm run build && npm publish dist",
     "prepush": "npm run lint",
     "test": "BABEL_ENV=test nyc ava -v",
     "report": "nyc report --reporter=html",
     "codecov": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "coverageCheck": "nyc --check-coverage --lines 80 --functions 80 --branches 80 npm test",
-    "lint": "eslint ./src"
+    "coverageCheck": "BABEL_ENV=test nyc --check-coverage --lines 80 --functions 80 --branches 80 ava -v",
+    "lint": "eslint ./src & npm run coverageCheck"
   },
   "dependencies": {
     "axios": "^0.16.2",
@@ -24,27 +34,23 @@
     "ava": "^0.22.0",
     "babel-cli": "^6.24.1",
     "babel-core": "^6.25.0",
-    "babel-eslint": "^7.2.3",
-    "babel-loader": "^7.1.0",
     "babel-plugin-istanbul": "^4.1.4",
     "babel-plugin-lodash": "^3.2.11",
-    "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.0",
     "babel-preset-stage-0": "^6.24.1",
     "codecov": "^2.3.0",
     "eslint": "^4.1.1",
     "eslint-config-shuyun": "^3.0.0",
-    "eslint-friendly-formatter": "^3.0.0",
-    "eslint-loader": "^1.8.0",
-    "eslint-plugin-babel": "^4.1.1",
-    "express": "^4.15.3",
-    "husky": "^0.14.1",
-    "nyc": "^11.1.0",
-    "sinon": "^3.2.1"
+    "husky": "^0.14.3",
+    "nyc": "^11.2.1",
+    "sinon": "^4.0.1"
   },
   "eslintConfig": {
-    "extends": "shuyun"
+    "extends": "shuyun",
+    "rules": {
+      "object-curly-spacing": "off"
+    }
   },
   "eslintIgnore": [
     "lib/*"

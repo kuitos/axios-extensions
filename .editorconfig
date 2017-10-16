@@ -18,6 +18,6 @@ indent_style = tab
 [*.md]
 trim_trailing_whitespace = false
 
-[{package.json,.babelrc,.eslintrc,.esdocrc}]
+[{package.json,*.babelrc,.eslintrc,.esdocrc}]
 indent_style = space
 indent_size = 2

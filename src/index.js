@@ -4,11 +4,14 @@
  * @since 2017-09-28
  */
 
-import http from './http';
-import resource, { setHttpClient } from './resource';
+import Cache from 'lru-cache';
+import cacheAdapterEnhancer from './cacheAdapterEnhancer';
+import throttleAdapterEnhancer from './throttleAdapterEnhancer';
+import normalizeInterceptor from './normalizeInterceptor';
 
 export {
-	http,
-	setHttpClient,
-	resource
+	Cache,
+	cacheAdapterEnhancer,
+	throttleAdapterEnhancer,
+	normalizeInterceptor
 };

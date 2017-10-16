@@ -1,7 +1,4 @@
 {
-  "presets": [
-    "env"
-  ],
   "plugins": [
     [
       "transform-runtime",
@@ -9,11 +6,31 @@
         "polyfill": false
       }
     ],
-    "transform-decorators-legacy",
     "lodash"
   ],
   "env": {
+    "cjs": {
+      "presets": [
+        "env",
+        "stage-0"
+      ]
+    },
+    "esm": {
+      "presets": [
+        [
+          "env",
+          {
+            "modules": false
+          }
+        ],
+        "stage-0"
+      ]
+    },
     "test": {
+      "presets": [
+        "env",
+        "stage-0"
+      ],
       "plugins": [
         "istanbul"
       ]

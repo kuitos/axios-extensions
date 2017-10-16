@@ -1,5 +1,6 @@
-lib/
 node_modules/
 .idea/
 .nyc_output/
 coverage/
+coverage.lcov
+dist/
