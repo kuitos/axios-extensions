@@ -1,6 +1,6 @@
 {
   "name": "axios-extensions",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "make axios great again",
   "homepage": "https://github.com/kuitos/axios-extensions",
   "author": "kuitos",
@@ -78,11 +78,6 @@
   "nyc": {
     "include": [
       "src/**/*.js"
-    ],
-    "exclude": [
-      "**/node_modules/**",
-      "examples/**",
-      "**/__tests__/**"
     ],
     "all": true,
     "require": [

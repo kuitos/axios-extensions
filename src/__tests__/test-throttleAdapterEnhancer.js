@@ -44,8 +44,29 @@ test('throttle adapter should cache request in a threshold seconds', async t => 
 	t.is(end - start < threshold, true);
 
 	await new Promise(r => setTimeout(r, threshold));
-	await http.get('/users').then(onSuccess);
-	t.is(onSuccess.callCount, 6);
+	await Promise.all([
+		http.get('/users').then(onSuccess),
+		http.get('/users').then(onSuccess)
+	]);
+	t.is(onSuccess.callCount, 7);
+	t.is(adapterCb.callCount, 2);
+
+});
+
+test('throttle adapter shouldn`t do anything when a non-get request invoked', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const http = axios.create({
+		adapter: throttleAdapterEnhancer(mockedAdapter)
+	});
+
+	const onSuccess = spy();
+	await Promise.all([
+		http.post('/users').then(onSuccess),
+		http.post('/users').then(onSuccess)
+	]);
+	t.is(onSuccess.callCount, 2);
 	t.is(adapterCb.callCount, 2);
 
 });
