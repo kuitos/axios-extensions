@@ -22,7 +22,7 @@ const http = axios.create({
 ## Document
 
 ### cacheAdapterEnhancer(adapter, cacheEnabledByDefault = true, enableCacheFlag = 'cache', cacheAge = FIVE_MINUTES) : enhancedAdapter
-make axios cacheable, default cache flag
+make axios cacheable
 
 #### default usage
 
