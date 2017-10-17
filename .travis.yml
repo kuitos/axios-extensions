@@ -4,6 +4,8 @@ node_js:
 cache:
   directories:
     - node_modules
+before_install:
+  - rm -fr node_modules/*/.git/
 script:
   - npm test
 
