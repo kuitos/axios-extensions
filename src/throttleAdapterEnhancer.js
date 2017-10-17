@@ -10,7 +10,7 @@ import buildUrl from './utils/buildUrl';
 export default function throttleAdapterEnhancer(adapter, threshold = 1000, cacheCapacity = 10) {
 
 	const cache = new LRUCache({ max: cacheCapacity });
-	const cacheRequest = (index, config) => {
+	const recordCacheWithRequest = (index, config) => {
 
 		const responsePromise = (async () => {
 
@@ -50,10 +50,21 @@ export default function throttleAdapterEnhancer(adapter, threshold = 1000, cache
 		if (method === 'get') {
 
 			if (now - cachedRecord.timestamp <= threshold) {
-				return cachedRecord.value || cacheRequest(index, config);
+
+				const responsePromise = cachedRecord.value;
+				if (responsePromise) {
+
+					/* istanbul ignore next */
+					if (process.env.NODE_ENV !== 'production') {
+						// eslint-disable-next-line no-console
+						console.log(`request via throttle adapter: ${index}`);
+					}
+
+					return responsePromise;
+				}
 			}
 
-			return cacheRequest(index, config);
+			return recordCacheWithRequest(index, config);
 		}
 
 		return adapter(config);

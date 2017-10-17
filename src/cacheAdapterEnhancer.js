@@ -32,7 +32,7 @@ export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = tr
 					try {
 						const response = await adapter(config);
 						cache.set(index, Promise.resolve(response));
-						return response;
+						return { ...response };
 					} catch (reason) {
 						cache.del(index);
 						return Promise.reject(reason);
@@ -42,9 +42,18 @@ export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = tr
 
 				// put the promise for the non-transformed response into cache as a placeholder
 				cache.set(index, responsePromise);
+
+				return responsePromise;
+			}
+
+			/* istanbul ignore next */
+			if (process.env.NODE_ENV !== 'production') {
+				// eslint-disable-next-line no-console
+				console.log(`request via cache adapter: ${index}`);
 			}
 
 			return responsePromise;
+
 		}
 
 		return adapter(config);

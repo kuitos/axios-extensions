@@ -7,11 +7,9 @@
 import Cache from 'lru-cache';
 import cacheAdapterEnhancer from './cacheAdapterEnhancer';
 import throttleAdapterEnhancer from './throttleAdapterEnhancer';
-import normalizeInterceptor from './normalizeInterceptor';
 
 export {
 	Cache,
 	cacheAdapterEnhancer,
-	throttleAdapterEnhancer,
-	normalizeInterceptor
+	throttleAdapterEnhancer
 };
