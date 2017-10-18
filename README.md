@@ -38,7 +38,7 @@ const http = axios.create({
 });
 
 http.get('/users'); // make real http request
-http.get('/users'); // use the response with the previous request from cache, without real http request
+http.get('/users'); // use the response from the cache of previous request, without real http request made
 http.get('/users', { cache: false }); // disable cache manually and the the real http request invoked   
 
 ```
