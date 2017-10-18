@@ -15,16 +15,16 @@ import { cacheAdapterEnhancer, throttleAdapterEnhancer } from 'axios-extensions'
 const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
-	adapter: throttleAdapterEnhancer(cacheAdapterEnhancer(axios.defaults.adapter))
+	adapter: throttleAdapterEnhancer(cacheAdapterEnhancer(axios.defaults.adapter, true))
 });
 ```
 
-## Document
+## API
 
-### cacheAdapterEnhancer(adapter, cacheEnabledByDefault = true, enableCacheFlag = 'cache', cacheAge = FIVE_MINUTES) : enhancedAdapter
+### cacheAdapterEnhancer(adapter, cacheEnabledByDefault = false, enableCacheFlag = 'cache', cacheAge = FIVE_MINUTES) : enhancedAdapter
 make axios cacheable
 
-#### default usage
+#### basic usage
 
 ```javascript
 import axios from 'axios';
@@ -34,7 +34,7 @@ const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
 	// cache will be enabled by default
-	adapter: cacheAdapterEnhancer(axios.defaults.adapter)
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter, true)
 });
 
 http.get('/users'); // make real http request
@@ -60,3 +60,22 @@ http.get('/users', { useCache: true }); // use the response cache from previous 
 
 ### throttleAdapterEnhancer(adapter, threshold = 1000, cacheCapacity = 10) : enhancedAdapter
 throttle requests at most once per every threshold milliseconds
+
+```js
+import axios from 'axios';
+import { throttleAdapterEnhancer } from 'axios-extensions';
+
+const http = axios.create({
+	baseURL: '/',
+	headers: { 'Cache-Control': 'no-cache' },
+	adapter: throttleAdapterEnhancer(axios.defaults.adapter, 2 * 1000)
+});
+
+http.get('/users'); // make real http request
+http.get('/users'); // responsed from the cache
+http.get('/users'); // responsed from the cache
+
+setTimeout(() => {
+	http.get('/users'); // after 2s, the real request makes again
+}, 2 * 1000);
+```
