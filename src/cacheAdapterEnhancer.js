@@ -9,7 +9,7 @@ import buildUrl from './utils/buildUrl';
 
 const FIVE_MINUTES = 1000 * 60 * 5;
 
-export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = true, enableCacheFlag = 'cache', cacheAge = FIVE_MINUTES) {
+export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = false, enableCacheFlag = 'cache', cacheAge = FIVE_MINUTES) {
 
 	const cache = new LRUCache({ maxAge: cacheAge });
 

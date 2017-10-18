@@ -24,7 +24,7 @@ test('cache adapter should cache request without noCacheFlag', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter)
+		adapter: cacheAdapterEnhancer(mockedAdapter, true)
 	});
 
 	const onSuccess = spy();
@@ -55,7 +55,7 @@ test('cache adapter shouldn`t cache request with noCacheFlag', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter, 'cache')
+		adapter: cacheAdapterEnhancer(mockedAdapter, true, 'cache')
 	});
 
 	const onSuccess = spy();
@@ -70,7 +70,7 @@ test('cache will be removed when request error', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter)
+		adapter: cacheAdapterEnhancer(mockedAdapter, true)
 	});
 
 	const onSuccess = spy();
@@ -88,6 +88,25 @@ test('cache will be removed when request error', async t => {
 		http.get('/users').then(onSuccess, onError)
 	]);
 	t.is(onSuccess.callCount, 2);
+	t.is(adapterCb.callCount, 2);
+
+});
+
+test('disable default cache switcher', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const http = axios.create({
+		adapter: cacheAdapterEnhancer(mockedAdapter)
+	});
+
+	const onSuccess = spy();
+	await Promise.all([
+		http.get('/users').then(onSuccess),
+		http.get('/users', { cache: true }).then(onSuccess),
+		http.get('/users', { cache: true }).then(onSuccess)
+	]);
+	t.is(onSuccess.callCount, 3);
 	t.is(adapterCb.callCount, 2);
 
 });
