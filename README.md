@@ -22,7 +22,7 @@ const http = axios.create({
 ## API
 
 ### cacheAdapterEnhancer(adapter, cacheEnabledByDefault = false, enableCacheFlag = 'cache', cacheAge = FIVE_MINUTES) : enhancedAdapter
-make axios cacheable
+makes axios cacheable
 
 #### basic usage
 
@@ -59,7 +59,7 @@ http.get('/users', { useCache: true }); // use the response cache from previous 
 ```
 
 ### throttleAdapterEnhancer(adapter, threshold = 1000, cacheCapacity = 10) : enhancedAdapter
-throttle requests at most once per every threshold milliseconds
+throttle requests most once per threshold milliseconds
 
 ```js
 import axios from 'axios';
