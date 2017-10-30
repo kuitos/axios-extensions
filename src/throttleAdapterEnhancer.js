@@ -57,7 +57,7 @@ export default function throttleAdapterEnhancer(adapter, threshold = 1000, cache
 					/* istanbul ignore next */
 					if (process.env.NODE_ENV !== 'production') {
 						// eslint-disable-next-line no-console
-						console.log(`request via throttle adapter: ${index}`);
+						console.info(`request cached by throttle adapter: ${index}`);
 					}
 
 					return responsePromise;
