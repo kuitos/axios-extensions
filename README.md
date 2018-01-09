@@ -5,7 +5,12 @@
 [![npm downloads](https://img.shields.io/npm/dt/axios-extensions.svg?style=flat-square)](https://www.npmjs.com/package/axios-extensions)
 [![Build Status](https://img.shields.io/travis/kuitos/axios-extensions.svg?style=flat-square)](https://travis-ci.org/kuitos/axios-extensions)
 
-## example
+## Install
+```bash
+npm i axios-extensions -S
+```
+
+## Usage
 
 ```javascript
 import axios from 'axios';
