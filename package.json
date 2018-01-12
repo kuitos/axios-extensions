@@ -1,6 +1,6 @@
 {
   "name": "axios-extensions",
-  "version": "1.1.1",
+  "version": "1.1.3",
   "description": "make axios great again",
   "homepage": "https://github.com/kuitos/axios-extensions",
   "author": "kuitos",
@@ -12,8 +12,9 @@
   ],
   "main": "./lib/index.js",
   "module": "./esm/index.js",
+  "types": "./index.d.ts",
   "scripts": {
-    "build": "npm run build:cjs && npm run build:esm && cp package.json dist/package.json && cp README.md dist/README.md",
+    "build": "npm run build:cjs && npm run build:esm && cp {package.json,README.md,src/index.d.ts} dist",
     "build:cjs": "rm -fr dist/lib && NODE_ENV=cjs babel ./src --out-dir dist/lib --ignore **/__tests__,node_modules",
     "build:esm": "rm -fr dist/esm && NODE_ENV=esm babel ./src --out-dir dist/esm --ignore **/__tests__,node_modules",
     "start": "NODE_ENV=test ava -w",
@@ -32,6 +33,7 @@
     "lru-cache": "^4.1.1"
   },
   "devDependencies": {
+    "@types/lru-cache": "^4.1.0",
     "ava": "^0.22.0",
     "babel-cli": "^6.24.1",
     "babel-core": "^6.25.0",
