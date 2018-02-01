@@ -9,6 +9,10 @@
 ```bash
 npm i axios-extensions -S
 ```
+or
+```bash
+yarn add axios-extensions
+```
 
 ## Usage
 
