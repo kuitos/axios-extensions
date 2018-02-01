@@ -47,7 +47,7 @@ export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = fa
 			}
 
 			/* istanbul ignore next */
-			if (process.env.NODE_ENV !== 'production') {
+			if (process.env.LOGGER_LEVEL === 'info') {
 				// eslint-disable-next-line no-console
 				console.info(`request cached by cache adapter: ${index}`);
 			}

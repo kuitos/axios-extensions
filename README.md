@@ -28,6 +28,24 @@ const http = axios.create({
 });
 ```
 
+### Enable Logging
+
+It is highly recommended to enable the request logging recorder in development environment(it is disabled in default).
+
+#### browser (webpack)
+```js
+new webpack.DefinePlugin({
+  'process.env.LOGGER_LEVEL': JSON.stringify('info')
+})
+```
+#### node
+```json
+// package.json
+"scripts": {
+	"start": "cross-env LOGGER_LEVEL=info node server.js"
+}
+```
+
 ## API
 
 ### cacheAdapterEnhancer(adapter, cacheEnabledByDefault = false, enableCacheFlag = 'cache', cacheAge = FIVE_MINUTES) : enhancedAdapter
