@@ -8,6 +8,7 @@
 import axios from 'axios';
 import { test } from 'ava';
 import { spy } from 'sinon';
+import LRUCache from 'lru-cache';
 
 import cacheAdapterEnhancer from '../cacheAdapterEnhancer';
 
@@ -24,7 +25,7 @@ test('cache adapter should cache request without noCacheFlag', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter, true)
+		adapter: cacheAdapterEnhancer(mockedAdapter, true).adapter
 	});
 
 	const onSuccess = spy();
@@ -55,7 +56,7 @@ test('cache adapter shouldn`t cache request with noCacheFlag', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter, true, 'cache')
+		adapter: cacheAdapterEnhancer(mockedAdapter, true, 'cache').adapter
 	});
 
 	const onSuccess = spy();
@@ -70,7 +71,7 @@ test('cache will be removed when request error', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter, true)
+		adapter: cacheAdapterEnhancer(mockedAdapter, true).adapter
 	});
 
 	const onSuccess = spy();
@@ -97,7 +98,7 @@ test('disable default cache switcher', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter)
+		adapter: cacheAdapterEnhancer(mockedAdapter).adapter
 	});
 
 	const onSuccess = spy();
@@ -109,5 +110,32 @@ test('disable default cache switcher', async t => {
 	t.is(onSuccess.callCount, 3);
 	t.is(adapterCb.callCount, 2);
 
+});
+
+test('exposes cache to the client for explicitly resetting', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const cacheAdapter = cacheAdapterEnhancer(mockedAdapter, true);
+	const http = axios.create({
+		adapter: cacheAdapter.adapter
+	});
+
+	t.is(cacheAdapter.cache instanceof LRUCache, true);
+
+	const onSuccess = spy();
+	await Promise.all([
+		http.get('/users').then(onSuccess),
+		http.get('/users').then(onSuccess)
+	]);
+	t.is(onSuccess.callCount, 2);
+	t.is(adapterCb.callCount, 1);
+	cacheAdapter.cache.reset();
+	await Promise.all([
+		http.get('/users').then(onSuccess),
+		http.get('/users').then(onSuccess)
+	]);
+	t.is(onSuccess.callCount, 4);
+	t.is(adapterCb.callCount, 2);
 });
 
