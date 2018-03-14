@@ -5,7 +5,7 @@
  */
 
 import LRUCache from 'lru-cache';
-import buildUrl from './utils/buildUrl';
+import buildSortedURL from './utils/buildSortedURL';
 
 export default function throttleAdapterEnhancer(adapter, threshold = 1000, cacheCapacity = 10) {
 
@@ -41,8 +41,8 @@ export default function throttleAdapterEnhancer(adapter, threshold = 1000, cache
 
 	return config => {
 
-		const { url, method, params } = config;
-		const index = buildUrl(url, params);
+		const { url, method, params, paramsSerializer } = config;
+		const index = buildSortedURL(url, params, paramsSerializer);
 
 		const now = Date.now();
 		const cachedRecord = cache.get(index) || { timestamp: now };

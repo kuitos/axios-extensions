@@ -5,7 +5,7 @@
  */
 
 import LRUCache from 'lru-cache';
-import buildUrl from './utils/buildUrl';
+import buildSortedURL from './utils/buildSortedURL';
 
 const FIVE_MINUTES = 1000 * 60 * 5;
 
@@ -15,10 +15,10 @@ export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = fa
 
 	return config => {
 
-		const { url, method, params } = config;
+		const { url, method, params, paramsSerializer } = config;
 
-		// 以 url 跟 params 建立索引
-		const index = buildUrl(url, params);
+		// build the index according to the url and params
+		const index = buildSortedURL(url, params, paramsSerializer);
 		const useCache = config[enableCacheFlag] !== void 0 ? config[enableCacheFlag] : cacheEnabledByDefault;
 
 		if (method === 'get' && useCache) {
