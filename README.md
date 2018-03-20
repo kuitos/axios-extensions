@@ -5,7 +5,13 @@
 [![npm downloads](https://img.shields.io/npm/dt/axios-extensions.svg?style=flat-square)](https://www.npmjs.com/package/axios-extensions)
 [![Build Status](https://img.shields.io/travis/kuitos/axios-extensions.svg?style=flat-square)](https://travis-ci.org/kuitos/axios-extensions)
 
-## Install
+A non-invasive, simple, reliable collection of axios extension
+
+## Extension List
+* [cacheAdapterEnhancer](#cacheadapterenhanceradapter-cacheenabledbydefault--false-enablecacheflag--cache-defaultcache--new-lrucache-maxage-five_minutes---enhancedadapter) make request cacheable
+* [throttleAdapterEnhancer](#throttleadapterenhanceradapter-threshold--1000-cachecapacity--10--enhancedadapter) make request throttled automatic
+
+## Installing
 ```bash
 npm i axios-extensions -S
 ```
@@ -103,7 +109,7 @@ http.get('/users', { cache: true }); // make the request cacheable(real http req
 
 // define a cache manually
 const cacheA = new Cache();
-// or a cache-like object
+// or a cache-like instance
 const cacheB = { get() {/*...*/}, set() {/*...*/}, del() {/*...*/} };
 
 // two actual request will be made due to the different cache 
