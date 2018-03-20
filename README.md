@@ -48,7 +48,7 @@ new webpack.DefinePlugin({
 
 ## API
 
-### cacheAdapterEnhancer(adapter, cacheEnabledByDefault = false, enableCacheFlag = 'cache', cacheAge = FIVE_MINUTES) : enhancedAdapter
+### cacheAdapterEnhancer(adapter, cacheEnabledByDefault = false, enableCacheFlag = 'cache', defaultCache = new LRUCache({ maxAge: FIVE_MINUTES })) : enhancedAdapter
 makes axios cacheable
 
 #### basic usage
@@ -66,8 +66,7 @@ const http = axios.create({
 
 http.get('/users'); // make real http request
 http.get('/users'); // use the response from the cache of previous request, without real http request made
-http.get('/users', { cache: false }); // disable cache manually and the the real http request invoked   
-
+http.get('/users', { cache: false }); // disable cache manually and the the real http request invoked
 ```
 
 #### custom cache flag
@@ -80,9 +79,39 @@ const http = axios.create({
 	adapter: cacheAdapterEnhancer(axios.defaults.adapter, false, 'useCache')
 });
 
-http.get('/users', ); // default cache was disabled and then the real http request invoked 
+http.get('/users'); // default cache was disabled and then the real http request invoked 
 http.get('/users', { useCache: true }); // make the request cacheable(real http request made due to first request invoke)
 http.get('/users', { useCache: true }); // use the response cache from previous request
+```
+
+#### more advanced
+
+Besides configuring the request through the cacheAdapterEnhancer, we can enjoy more advanced features when configuring every individual request.
+
+```js
+import axios from 'axios';
+import { cacheAdapterEnhancer, Cache } from 'axios-extensions';
+
+const http = axios.create({
+	baseURL: '/',
+	headers: { 'Cache-Control': 'no-cache' },
+	// disable the default cache and set the cache flag
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter, false)
+});
+
+http.get('/users', { cache: true }); // make the request cacheable(real http request made due to first request invoke)
+
+// define a cache manually
+const cacheA = new Cache();
+// or a cache-like object
+const cacheB = { get() {/*...*/}, set() {/*...*/}, del() {/*...*/} };
+
+// two actual request will be made due to the different cache 
+http.get('/users', { cache: cacheA });
+http.get('/users', { cache: cacheB });
+
+// a actual request made and cached due to force update configured
+http.get('/users', { cache: cacheA, forceUpdate: true });
 ```
 
 ### throttleAdapterEnhancer(adapter, threshold = 1000, cacheCapacity = 10) : enhancedAdapter

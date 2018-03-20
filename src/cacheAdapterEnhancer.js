@@ -6,26 +6,28 @@
 
 import LRUCache from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
+import isCacheLike from './utils/isCacheLike';
 
 const FIVE_MINUTES = 1000 * 60 * 5;
 
-export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = false, enableCacheFlag = 'cache', cacheAge = FIVE_MINUTES) {
-
-	const cache = new LRUCache({ maxAge: cacheAge });
+export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = false, enableCacheFlag = 'cache', defaultLRUCache = new LRUCache({ maxAge: FIVE_MINUTES })) {
 
 	return config => {
 
-		const { url, method, params, paramsSerializer } = config;
-
-		// build the index according to the url and params
-		const index = buildSortedURL(url, params, paramsSerializer);
+		const { url, method, params, paramsSerializer, forceUpdate } = config;
 		const useCache = config[enableCacheFlag] !== void 0 ? config[enableCacheFlag] : cacheEnabledByDefault;
 
 		if (method === 'get' && useCache) {
 
+			// if had provide a specified cache, then use it instead
+			const cache = isCacheLike(useCache) ? useCache : defaultLRUCache;
+
+			// build the index according to the url and params
+			const index = buildSortedURL(url, params, paramsSerializer);
+
 			let responsePromise = cache.get(index);
 
-			if (!responsePromise) {
+			if (!responsePromise || forceUpdate) {
 
 				responsePromise = (async () => {
 
@@ -35,7 +37,7 @@ export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = fa
 						return { ...response };
 					} catch (reason) {
 						cache.del(index);
-						return Promise.reject(reason);
+						throw reason;
 					}
 
 				})();
