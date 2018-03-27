@@ -1,6 +1,6 @@
 {
   "name": "axios-extensions",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "make axios great again",
   "homepage": "https://github.com/kuitos/axios-extensions",
   "author": "kuitos",
@@ -27,7 +27,7 @@
     "lint": "eslint ./src & npm run coverageCheck"
   },
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "*",
     "babel-runtime": "^6.26.0",
     "lru-cache": "^4.1.1"
   },

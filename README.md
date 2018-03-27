@@ -92,7 +92,7 @@ http.get('/users', { useCache: true }); // use the response cache from previous 
 
 #### more advanced
 
-Besides configuring the request through the cacheAdapterEnhancer, we can enjoy more advanced features when configuring every individual request.
+Besides configuring the request through the cacheAdapterEnhancer, we can enjoy more advanced features via configuring every individual request.
 
 ```js
 import axios from 'axios';
