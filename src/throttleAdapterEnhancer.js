@@ -23,7 +23,7 @@ export default function throttleAdapterEnhancer(adapter, threshold = 1000, cache
 					value: Promise.resolve(response)
 				});
 
-				return { ...response };
+				return response;
 			} catch (reason) {
 				cache.del(index);
 				return Promise.reject(reason);

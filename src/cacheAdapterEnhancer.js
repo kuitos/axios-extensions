@@ -34,7 +34,7 @@ export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = fa
 					try {
 						const response = await adapter(config);
 						cache.set(index, Promise.resolve(response));
-						return { ...response };
+						return response;
 					} catch (reason) {
 						cache.del(index);
 						throw reason;
