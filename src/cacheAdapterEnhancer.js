@@ -14,16 +14,21 @@ export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = fa
 
 	return config => {
 
-		const { url, method, params, paramsSerializer, forceUpdate } = config;
+		const { url, method, params, paramsSerializer, forceUpdate, data } = config;
 		const useCache = config[enableCacheFlag] !== void 0 ? config[enableCacheFlag] : cacheEnabledByDefault;
 
-		if (method === 'get' && useCache) {
-
+		// if (method === 'get' && useCache) {
+		if (useCache) {
+			let index;
 			// if had provide a specified cache, then use it instead
 			const cache = isCacheLike(useCache) ? useCache : defaultLRUCache;
 
 			// build the index according to the url and params
-			const index = buildSortedURL(url, params, paramsSerializer);
+			if(method === 'get') {
+				index = buildSortedURL(url, params, paramsSerializer);
+			} else if(method === 'post') {
+				index = buildSortedURL(url, data);
+			}
 
 			let responsePromise = cache.get(index);
 
