@@ -7,7 +7,19 @@ cache:
 before_install:
   - rm -fr node_modules/*/.git/
 script:
+  - npm run lint
   - npm test
 
 after_success:
   - npm run codecov
+  - npm run build
+
+before_deploy:
+  - cd dist
+deploy:
+  provider: npm
+  email: kuitos.lau@gmail.com
+  api_key: NPM_AUTH_TOKEN
+  skip_cleanup: true
+  on:
+    tags: true
