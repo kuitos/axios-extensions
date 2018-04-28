@@ -14,11 +14,11 @@
   "module": "./esm/index.js",
   "types": "./index.d.ts",
   "scripts": {
-    "build": "rm -fr dist && npm run build:cjs && npm run build:esm && cp {package.json,README.md,src/index.d.ts} dist",
+    "build": "rm -fr dist && npm run build:cjs && npm run build:esm",
     "build:cjs": "rm -fr dist/lib && NODE_ENV=cjs babel ./src --out-dir dist/lib --ignore **/__tests__,node_modules",
     "build:esm": "rm -fr dist/esm && NODE_ENV=esm babel ./src --out-dir dist/esm --ignore **/__tests__,node_modules",
     "start": "NODE_ENV=test ava -w",
-    "pub": "npm run lint && npm run build && npm publish dist",
+    "pub": "npm run lint && npm run build && cp {package.json,README.md,src/index.d.ts} dist && npm publish dist",
     "prepush": "npm run lint",
     "test": "BABEL_ENV=test nyc ava -v",
     "report": "nyc report --reporter=html",

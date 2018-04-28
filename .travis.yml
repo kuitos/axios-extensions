@@ -7,7 +7,19 @@ cache:
 before_install:
   - rm -fr node_modules/*/.git/
 script:
-  - npm test
+  - npm run lint
 
 after_success:
   - npm run codecov
+
+before_deploy:
+  - npm run build
+  - cp {package.json,README.md,src/index.d.ts} dist
+  - cd dist
+deploy:
+  provider: npm
+  email: kuitos.lau@gmail.com
+  api_key: $NPM_AUTH_TOKEN
+  skip_cleanup: true
+  on:
+    tags: true
