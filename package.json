@@ -1,6 +1,6 @@
 {
   "name": "axios-extensions",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "make axios great again",
   "homepage": "https://github.com/kuitos/axios-extensions",
   "author": "kuitos",
@@ -49,6 +49,7 @@
     "sinon": "^4.0.1"
   },
   "eslintConfig": {
+    "root": true,
     "extends": "shuyun",
     "rules": {
       "object-curly-spacing": "off",
