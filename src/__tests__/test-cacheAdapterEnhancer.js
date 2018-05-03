@@ -26,7 +26,7 @@ test('cache adapter should cache request without noCacheFlag', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter, true)
+		adapter: cacheAdapterEnhancer(mockedAdapter, { cacheEnabledByDefault: true })
 	});
 
 	const onSuccess = spy();
@@ -57,7 +57,7 @@ test('cache adapter shouldn\'t cache request with noCacheFlag', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter, true, 'cache')
+		adapter: cacheAdapterEnhancer(mockedAdapter, { cacheEnabledByDefault: true, enableCacheFlag: 'cache' })
 	});
 
 	const onSuccess = spy();
@@ -72,7 +72,7 @@ test('cache will be removed when request error', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter, true)
+		adapter: cacheAdapterEnhancer(mockedAdapter, { cacheEnabledByDefault: true })
 	});
 
 	const onSuccess = spy();
@@ -120,7 +120,7 @@ test('request will refresh the cache with forceUpdate config', async t => {
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const cache = new LRUCache();
 	const http = axios.create({
-		adapter: cacheAdapterEnhancer(mockedAdapter, true, 'cache', cache)
+		adapter: cacheAdapterEnhancer(mockedAdapter, { cacheEnabledByDefault: true, enableCacheFlag: 'cache', defaultLRUCache: cache })
 	});
 
 	const onSuccess = spy();
