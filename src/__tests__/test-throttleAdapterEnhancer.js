@@ -25,7 +25,7 @@ test('throttle adapter should cache request in a threshold seconds', async t => 
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: throttleAdapterEnhancer(mockedAdapter, threshold)
+		adapter: throttleAdapterEnhancer(mockedAdapter, { threshold })
 	});
 
 	const onSuccess = spy();

@@ -7,8 +7,8 @@
 import LRUCache from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
 
-export default function throttleAdapterEnhancer(adapter, threshold = 1000, cacheCapacity = 10) {
-
+export default function throttleAdapterEnhancer(adapter, options = {}) {
+	const { threshold = 1000, cacheCapacity = 10 } = options;
 	const cache = new LRUCache({ max: cacheCapacity });
 	const recordCacheWithRequest = (index, config) => {
 

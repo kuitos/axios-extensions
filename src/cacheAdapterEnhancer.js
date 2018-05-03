@@ -10,8 +10,8 @@ import isCacheLike from './utils/isCacheLike';
 
 const FIVE_MINUTES = 1000 * 60 * 5;
 
-export default function cacheAdapterEnhancer(adapter, cacheEnabledByDefault = false, enableCacheFlag = 'cache', defaultLRUCache = new LRUCache({ maxAge: FIVE_MINUTES })) {
-
+export default function cacheAdapterEnhancer(adapter, options = {}) {
+	const { cacheEnabledByDefault = false, enableCacheFlag = 'cache', defaultLRUCache = new LRUCache({ maxAge: FIVE_MINUTES }) } = options;
 	return config => {
 
 		const { url, method, params, paramsSerializer, forceUpdate } = config;
