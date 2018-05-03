@@ -12,6 +12,17 @@ interface ICacheLike<K, V> {
 	del(key: K): void;
 }
 
-declare const cacheAdapterEnhancer: <K, V>(adapter: AxiosAdapter, cacheEnabledByDefault?: boolean, enableCacheFlag?: string, cacheLike?: ICacheLike<K, V>) => AxiosAdapter;
-declare const throttleAdapterEnhancer: (adapter: AxiosAdapter, threshold?: number, cacheCapacity?: number) => AxiosAdapter;
+type cacheAdapterEnhancerOptions = {
+	cacheEnabledByDefault?: boolean,
+	enableCacheFlag?: string,
+	defaultLRUCache?: ICacheLike
+}
+
+type throttleAdapterEnhancerOptions = {
+	threshold?: number,
+	cacheCapacity?: number
+}
+
+declare const cacheAdapterEnhancer: <K, V>(adapter: AxiosAdapter, options: cacheAdapterEnhancerOptions) => AxiosAdapter;
+declare const throttleAdapterEnhancer: (adapter: AxiosAdapter, options: throttleAdapterEnhancerOptions) => AxiosAdapter;
 export { cacheAdapterEnhancer, throttleAdapterEnhancer, Cache };
