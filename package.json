@@ -1,6 +1,6 @@
 {
   "name": "axios-extensions",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "make axios great again",
   "homepage": "https://github.com/kuitos/axios-extensions",
   "repository": "https://github.com/kuitos/axios-extensions.git",
@@ -15,7 +15,7 @@
   "main": "./lib/index.js",
   "module": "./esm/index.js",
   "sideEffects": false,
-  "types": "./index.d.ts",
+  "types": "./lib/index.d.ts",
   "scripts": {
     "build": "rm -fr dist && npm run tsc",
     "tsc": "npm run tsc:cjs & npm run tsc:esm",
