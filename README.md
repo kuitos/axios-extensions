@@ -56,7 +56,7 @@ new webpack.DefinePlugin({
 
 ## API
 
-### cacheAdapterEnhancer(adapter, { enable = true, cacheFlag = 'cache', defaultCache = new LRUCache({ maxAge: FIVE_MINUTES })) : enhancedAdapter
+### cacheAdapterEnhancer(adapter, { enabledByDefault = true, cacheFlag = 'cache', defaultCache = new LRUCache({ maxAge: FIVE_MINUTES })) : enhancedAdapter
 
 makes axios cacheable
 
