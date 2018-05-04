@@ -6,9 +6,10 @@
 
 import { test } from 'ava';
 import axios from 'axios';
+import LRUCache from 'lru-cache';
 import { spy } from 'sinon';
 
-import throttleAdapterEnhancer from '../throttleAdapterEnhancer';
+import throttleAdapterEnhancer, { RecordedCache } from '../throttleAdapterEnhancer';
 
 const genMockAdapter = (cb: any) => (config: any) => {
 	cb();
@@ -95,4 +96,30 @@ test('cache will be removed when request error', async t => {
 	t.is(onSuccess.callCount, 2);
 	t.is(adapterCb.callCount, 2);
 
+});
+
+test('use a custom cache for throttle enhancer', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const cache = new LRUCache<string, RecordedCache>();
+	const http = axios.create({
+		adapter: throttleAdapterEnhancer(mockedAdapter, { cache }),
+	});
+
+	const onSuccess = spy();
+	await Promise.all([
+		http.get('/users').then(onSuccess),
+		http.get('/users').then(onSuccess),
+	]);
+	t.is(onSuccess.callCount, 2);
+	t.is(adapterCb.callCount, 1);
+
+	cache.del('/users');
+	await Promise.all([
+		http.get('/users').then(onSuccess),
+		http.get('/users').then(onSuccess),
+	]);
+	t.is(onSuccess.callCount, 4);
+	t.is(adapterCb.callCount, 2);
 });
