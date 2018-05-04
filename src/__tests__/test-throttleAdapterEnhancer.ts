@@ -1,17 +1,16 @@
-/* eslint-disable array-element-newline */
 /**
  * @author Kuitos
  * @homepage https://github.com/kuitos/
  * @since 2017-10-16
  */
 
-import axios from 'axios';
 import { test } from 'ava';
+import axios from 'axios';
 import { spy } from 'sinon';
 
 import throttleAdapterEnhancer from '../throttleAdapterEnhancer';
 
-const genMockAdapter = cb => config => {
+const genMockAdapter = (cb: any) => (config: any) => {
 	cb();
 	if (config.error) {
 		return Promise.reject(config);
@@ -25,7 +24,7 @@ test('throttle adapter should cache request in a threshold seconds', async t => 
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: throttleAdapterEnhancer(mockedAdapter, { threshold })
+		adapter: throttleAdapterEnhancer(mockedAdapter, { threshold }),
 	});
 
 	const onSuccess = spy();
@@ -46,7 +45,7 @@ test('throttle adapter should cache request in a threshold seconds', async t => 
 	await new Promise(r => setTimeout(r, threshold));
 	await Promise.all([
 		http.get('/users').then(onSuccess),
-		http.get('/users').then(onSuccess)
+		http.get('/users').then(onSuccess),
 	]);
 	t.is(onSuccess.callCount, 7);
 	t.is(adapterCb.callCount, 2);
@@ -58,13 +57,13 @@ test('throttle adapter shouldn`t do anything when a non-get request invoked', as
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: throttleAdapterEnhancer(mockedAdapter)
+		adapter: throttleAdapterEnhancer(mockedAdapter),
 	});
 
 	const onSuccess = spy();
 	await Promise.all([
 		http.post('/users').then(onSuccess),
-		http.post('/users').then(onSuccess)
+		http.post('/users').then(onSuccess),
 	]);
 	t.is(onSuccess.callCount, 2);
 	t.is(adapterCb.callCount, 2);
@@ -76,14 +75,14 @@ test('cache will be removed when request error', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-		adapter: throttleAdapterEnhancer(mockedAdapter)
+		adapter: throttleAdapterEnhancer(mockedAdapter),
 	});
 
 	const onSuccess = spy();
 	const onError = spy();
 	await Promise.all([
-		http.get('/users', { error: true }).then(onSuccess, onError),
-		http.get('/users').then(onSuccess, onError)
+		http.get('/users', { error: true } as any).then(onSuccess, onError),
+		http.get('/users').then(onSuccess, onError),
 	]);
 	t.is(onSuccess.callCount, 0);
 	t.is(onError.callCount, 2);
@@ -91,7 +90,7 @@ test('cache will be removed when request error', async t => {
 
 	await Promise.all([
 		http.get('/users').then(onSuccess, onError),
-		http.get('/users').then(onSuccess, onError)
+		http.get('/users').then(onSuccess, onError),
 	]);
 	t.is(onSuccess.callCount, 2);
 	t.is(adapterCb.callCount, 2);

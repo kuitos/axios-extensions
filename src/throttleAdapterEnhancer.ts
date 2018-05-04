@@ -4,13 +4,26 @@
  * @since 2017-10-11
  */
 
+import { AxiosAdapter, AxiosPromise, AxiosRequestConfig } from 'axios';
 import LRUCache from 'lru-cache';
+import { ICacheLike } from './cacheAdapterEnhancer';
 import buildSortedURL from './utils/buildSortedURL';
 
-export default function throttleAdapterEnhancer(adapter, options = {}) {
-	const { threshold = 1000, cacheCapacity = 10 } = options;
-	const cache = new LRUCache({ max: cacheCapacity });
-	const recordCacheWithRequest = (index, config) => {
+export type RecordedCache = {
+	timestamp: number;
+	value?: AxiosPromise;
+};
+
+export type Options = {
+	threshold?: number,
+	cache?: ICacheLike<RecordedCache>,
+};
+
+export default function throttleAdapterEnhancer(adapter: AxiosAdapter, options: Options = {}): AxiosAdapter {
+
+	const { threshold = 1000, cache = new LRUCache<string, RecordedCache>({ max: 10 }) } = options;
+
+	const recordCacheWithRequest = (index: string, config: AxiosRequestConfig) => {
 
 		const responsePromise = (async () => {
 
@@ -20,7 +33,7 @@ export default function throttleAdapterEnhancer(adapter, options = {}) {
 
 				cache.set(index, {
 					timestamp: Date.now(),
-					value: Promise.resolve(response)
+					value: Promise.resolve(response),
 				});
 
 				return response;
@@ -33,7 +46,7 @@ export default function throttleAdapterEnhancer(adapter, options = {}) {
 
 		cache.set(index, {
 			timestamp: Date.now(),
-			value: responsePromise
+			value: responsePromise,
 		});
 
 		return responsePromise;

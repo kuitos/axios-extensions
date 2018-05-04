@@ -11,5 +11,5 @@ import throttleAdapterEnhancer from './throttleAdapterEnhancer';
 export {
 	Cache,
 	cacheAdapterEnhancer,
-	throttleAdapterEnhancer
+	throttleAdapterEnhancer,
 };

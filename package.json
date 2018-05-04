@@ -3,6 +3,8 @@
   "version": "2.0.3",
   "description": "make axios great again",
   "homepage": "https://github.com/kuitos/axios-extensions",
+  "repository": "https://github.com/kuitos/axios-extensions.git",
+  "license": "MIT",
   "author": "kuitos",
   "keywords": [
     "axios",
@@ -12,82 +14,45 @@
   ],
   "main": "./lib/index.js",
   "module": "./esm/index.js",
+  "sideEffects": false,
   "types": "./index.d.ts",
   "scripts": {
-    "build": "rm -fr dist && npm run build:cjs && npm run build:esm",
-    "build:cjs": "rm -fr dist/lib && NODE_ENV=cjs babel ./src --out-dir dist/lib --ignore **/__tests__,node_modules",
-    "build:esm": "rm -fr dist/esm && NODE_ENV=esm babel ./src --out-dir dist/esm --ignore **/__tests__,node_modules",
-    "start": "NODE_ENV=test ava -w",
-    "pub": "npm run lint && npm run build && cp {package.json,README.md,src/index.d.ts} dist && npm publish dist",
+    "build": "rm -fr dist && npm run tsc",
+    "tsc": "npm run tsc:cjs & npm run tsc:esm",
+    "tsc:cjs": "rm -fr dist/lib && tsc",
+    "tsc:esm": "rm -fr dist/esm && tsc -p tsconfig.esm.json",
+    "start": "tsc -w && ava -w",
+    "pub": "npm run lint && npm run build && cp {package.json,README.md,LICENSE} dist && npm publish dist",
     "prepush": "npm run lint",
-    "test": "BABEL_ENV=test nyc ava -v",
+    "test": "npm run tsc:cjs && nyc ava -v",
+    "test:pure": "tsc && ava",
     "report": "nyc report --reporter=html",
     "codecov": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "coverageCheck": "BABEL_ENV=test nyc --check-coverage --lines 80 --functions 80 --branches 80 ava -v",
-    "lint": "eslint ./src & npm run coverageCheck"
+    "coverageCheck": "nyc --check-coverage --lines 80 --functions 80 --branches 80 npm run test:pure",
+    "lint": "tslint 'src/**/*.ts' & npm run coverageCheck"
   },
   "dependencies": {
-    "axios": "*",
     "@types/lru-cache": "^4.1.0",
-    "babel-runtime": "^6.26.0",
-    "lru-cache": "^4.1.1"
+    "axios": "*",
+    "lru-cache": "^4.1.1",
+    "tslib": "^1.9.0"
   },
   "devDependencies": {
-    "ava": "^0.22.0",
-    "babel-cli": "^6.24.1",
-    "babel-core": "^6.25.0",
-    "babel-plugin-istanbul": "^4.1.4",
-    "babel-plugin-lodash": "^3.2.11",
+    "@types/node": "^10.0.3",
+    "@types/sinon": "^4.3.1",
+    "ava": "^0.24.0",
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.6.0",
-    "babel-preset-stage-0": "^6.24.1",
-    "codecov": "^2.3.0",
-    "eslint": "^4.1.1",
-    "eslint-config-shuyun": "^3.0.0",
-    "husky": "^0.14.3",
-    "nyc": "^11.2.1",
-    "sinon": "^4.0.1"
+    "codecov": "^3.0.0",
+    "husky": "^0.14.1",
+    "nyc": "^11.4.1",
+    "sinon": "^5.0.3",
+    "tslint": "^5.8.0",
+    "tslint-eslint-rules": "^4.1.1",
+    "typescript": "^2.8.1"
   },
-  "eslintConfig": {
-    "root": true,
-    "extends": "shuyun",
-    "rules": {
-      "object-curly-spacing": "off",
-      "no-process-env": "off"
-    }
-  },
-  "eslintIgnore": [
-    "lib/*"
-  ],
-  "browserslist": "last 2 versions, ie > 9",
   "ava": {
-    "require": [
-      "babel-register"
-    ],
-    "files": [
-      "src/**/__tests__/**/*.js"
-    ],
-    "source": [
-      "src/**/*.js"
-    ],
-    "babel": {
-      "babelrc": true,
-      "env": {
-        "test": {
-          "sourceMaps": "inline"
-        }
-      }
-    }
-  },
-  "nyc": {
-    "include": [
-      "src/**/*.js"
-    ],
-    "all": true,
-    "require": [
-      "babel-register"
-    ],
-    "sourceMap": false,
-    "instrument": false
+    "files": "dist/lib/**/__tests__/**/*.js"
   }
 }

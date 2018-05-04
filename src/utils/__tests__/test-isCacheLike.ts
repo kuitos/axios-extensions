@@ -13,12 +13,16 @@ test('a object with specified method will be regard as cache', t => {
 	t.is(isCacheLike(cache), false);
 
 	cache = {
+
+		// tslint:disable-next-line
 		get() {
 		},
+		// tslint:disable-next-line
 		set() {
 		},
+		// tslint:disable-next-line
 		del() {
-		}
+		},
 	};
 	t.is(isCacheLike(cache), true);
 });

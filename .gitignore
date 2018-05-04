@@ -1,6 +1,7 @@
-node_modules/
 .idea/
+.DS_Store
 .nyc_output/
-coverage/
 coverage.lcov
+coverage/
+node_modules/
 dist/

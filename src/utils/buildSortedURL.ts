@@ -6,7 +6,7 @@
 
 import buildURL from 'axios/lib/helpers/buildURL';
 
-export default function buildSortedURL(...args) {
+export default function buildSortedURL(...args: any[]) {
 
 	const builtURL = buildURL(...args);
 

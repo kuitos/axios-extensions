@@ -16,7 +16,6 @@ test('build a simple url without params', t => {
 	t.is(builtUrl, `${url}`);
 });
 
-
 test('build a simple url with params', t => {
 
 	const url = '//cross-domain.test/users';
