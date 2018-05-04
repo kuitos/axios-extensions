@@ -108,8 +108,8 @@ test('disable default cache switcher', async t => {
 	const onSuccess = spy();
 	await Promise.all([
 		http.get('/users').then(onSuccess),
-		http.get('/users', { cache: true } as any).then(onSuccess),
-		http.get('/users', { cache: true } as any).then(onSuccess),
+		http.get('/users').then(onSuccess),
+		http.get('/users', { cache: false } as any).then(onSuccess),
 	]);
 	t.is(onSuccess.callCount, 3);
 	t.is(adapterCb.callCount, 2);
