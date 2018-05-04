@@ -14,7 +14,7 @@ after_success:
 
 before_deploy:
   - npm run build
-  - cp {package.json,README.md,LICENSE} dist
+  - cp {package.json,README.md,LICENSE,.npmignore} dist
   - cd dist
 deploy:
   provider: npm

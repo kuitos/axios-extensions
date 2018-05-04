@@ -22,7 +22,7 @@
     "tsc:cjs": "rm -fr dist/lib && tsc",
     "tsc:esm": "rm -fr dist/esm && tsc -p tsconfig.esm.json",
     "start": "tsc -w && ava -w",
-    "pub": "npm run lint && npm run build && cp {package.json,README.md,LICENSE} dist && npm publish dist",
+    "pub": "npm run lint && npm run build && cp {package.json,README.md,LICENSE,.npmignore} dist && npm publish dist",
     "prepush": "npm run lint",
     "test": "npm run tsc:cjs && nyc ava -v",
     "test:pure": "tsc && ava",
