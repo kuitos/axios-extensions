@@ -7,6 +7,8 @@
 
 A non-invasive, simple, reliable collection of axios extension
 
+*v3.x has a lot of api changes, if you are looking for v2.x doc, see [here](https://github.com/kuitos/axios-extensions/tree/v2.0.3)*
+
 ## Extension List
 * [cacheAdapterEnhancer](#cacheadapterenhanceradapter-cacheenabledbydefault--false-enablecacheflag--cache-defaultcache--new-lrucache-maxage-five_minutes---enhancedadapter) make request cacheable
 * [throttleAdapterEnhancer](#throttleadapterenhanceradapter-threshold--1000-cachecapacity--10--enhancedadapter) make request throttled automatic
@@ -30,7 +32,7 @@ import { cacheAdapterEnhancer, throttleAdapterEnhancer } from 'axios-extensions'
 const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
-	adapter: throttleAdapterEnhancer(cacheAdapterEnhancer(axios.defaults.adapter, true))
+	adapter: throttleAdapterEnhancer(cacheAdapterEnhancer(axios.defaults.adapter))
 });
 ```
 
@@ -54,7 +56,8 @@ new webpack.DefinePlugin({
 
 ## API
 
-### cacheAdapterEnhancer(adapter, cacheEnabledByDefault = false, enableCacheFlag = 'cache', defaultCache = new LRUCache({ maxAge: FIVE_MINUTES })) : enhancedAdapter
+### cacheAdapterEnhancer(adapter, { enable = true, cacheFlag = 'cache', defaultCache = new LRUCache({ maxAge: FIVE_MINUTES })) : enhancedAdapter
+
 makes axios cacheable
 
 #### basic usage
@@ -67,7 +70,7 @@ const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
 	// cache will be enabled by default
-	adapter: cacheAdapterEnhancer(axios.defaults.adapter, true)
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter)
 });
 
 http.get('/users'); // make real http request
@@ -82,7 +85,7 @@ const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
 	// disable the default cache and set the cache flag
-	adapter: cacheAdapterEnhancer(axios.defaults.adapter, false, 'useCache')
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter, { enabledByDefault: false, cacheFlag: 'useCache'})
 });
 
 http.get('/users'); // default cache was disabled and then the real http request invoked 
@@ -101,8 +104,8 @@ import { cacheAdapterEnhancer, Cache } from 'axios-extensions';
 const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
-	// disable the default cache and set the cache flag
-	adapter: cacheAdapterEnhancer(axios.defaults.adapter, false)
+	// disable the default cache
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter, { enabledByDefault: false })
 });
 
 http.get('/users', { cache: true }); // make the request cacheable(real http request made due to first request invoke)
@@ -120,7 +123,8 @@ http.get('/users', { cache: cacheB });
 http.get('/users', { cache: cacheA, forceUpdate: true });
 ```
 
-### throttleAdapterEnhancer(adapter, threshold = 1000, cacheCapacity = 10) : enhancedAdapter
+### throttleAdapterEnhancer(adapter, { threshold = 1000, cache = new LRUCache({ max: 10 }) }) : enhancedAdapter
+
 throttle requests most once per threshold milliseconds
 
 ```js
@@ -130,7 +134,7 @@ import { throttleAdapterEnhancer } from 'axios-extensions';
 const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
-	adapter: throttleAdapterEnhancer(axios.defaults.adapter, 2 * 1000)
+	adapter: throttleAdapterEnhancer(axios.defaults.adapter, { threshold: 2 * 1000 })
 });
 
 http.get('/users'); // make real http request
