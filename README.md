@@ -10,7 +10,7 @@ A non-invasive, simple, reliable collection of axios extension
 ## Extension List
 *v3.x has a lot of api changes, if you are looking for v2.x doc, see [here](https://github.com/kuitos/axios-extensions/tree/v2.0.3)*
 
-* [cacheAdapterEnhancer](#cacheadapterenhanceradapter--enable--true-cacheflag--cache-defaultcache--new-lrucache-maxage-five_minutes---enhancedadapter) make request cacheable
+* [cacheAdapterEnhancer](#cacheadapterenhanceradapter--enabledbydefault--true-cacheflag--cache-defaultcache--new-lrucache-maxage-five_minutes---enhancedadapter) make request cacheable
 * [throttleAdapterEnhancer](#throttleadapterenhanceradapter--threshold--1000-cache--new-lrucache-max-10----enhancedadapter) make request throttled automatic
 
 ## Installing
