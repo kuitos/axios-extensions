@@ -10,8 +10,8 @@ A non-invasive, simple, reliable collection of axios extension
 ## Extension List
 *v3.x has a lot of api changes, if you are looking for v2.x doc, see [here](https://github.com/kuitos/axios-extensions/tree/v2.0.3)*
 
-* [cacheAdapterEnhancer](#cacheadapterenhanceradapter) make request cacheable
-* [throttleAdapterEnhancer](#throttleadapterenhanceradapter) make request throttled automatic
+* [cacheAdapterEnhancer](#cacheadapterenhancer) make request cacheable
+* [throttleAdapterEnhancer](#throttleadapterenhancer) make request throttled automatic
 
 ## Installing
 ```bash
