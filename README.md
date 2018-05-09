@@ -60,8 +60,6 @@ new webpack.DefinePlugin({
 
 > Makes axios cacheable
 
-Interface: 
-
 ```
 cacheAdapterEnhancer(adapter, options) : enhancedAdapter
 ```
@@ -142,8 +140,6 @@ http.get('/users', { cache: cacheA, forceUpdate: true });
 ### throttleAdapterEnhancer
 
 > throttle requests most once per threshold milliseconds
-
-Interface:
 
 ```
 throttleAdapterEnhancer(adapter, options) : enhancedAdapter
