@@ -61,18 +61,18 @@ new webpack.DefinePlugin({
 > Makes axios cacheable
 
 ```
-cacheAdapterEnhancer(adapter, options) : enhancedAdapter
+cacheAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
 ```
 
-Where `adapter` is an axios adapter that will be cached, `options` is an optional that configuring caching: 
+Where `adapter` is an axios adapter which following the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), `options` is an optional that configuring caching: 
 
-| Param | Default value | Description | 
-| --- | --- | --- |
-| `enabledByDefault` |  `true` | Enables cache for all requests without explicit definition in every request (e.g. `cache: true`) |
-| `cacheFlag` | `'cache'` | Configures key (flag) for explicit definition of cache usage in axios request |
-| `defaultCache` | <pre>`new LRUCache({ maxAge: FIVE_MINUTES })`</pre>| Cache object that will be used for storing cached requests |
+| Param            | Type | Default value                            | Description                                                  |
+| ---------------- | ---------------------------------------- | ------------------------------------------------------------ | ---- |
+| enabledByDefault | boolean                              | true | Enables cache for all requests without explicit definition in request config (e.g. `cache: true`) |
+| cacheFlag        | string                            | 'cache' | Configures key (flag) for explicit definition of cache usage in axios request |
+| defaultCache     | CacheLike | <pre>new LRUCache({ maxAge: FIVE_MINUTES })</pre> | a CacheLike instance that will be used for storing requests by default, except you define a custom Cache with your request config |
 
-`cacheAdapterEnhancer` enhances axios adapter and return it back. So you can use this adapter for another purpose, e.g. throttle using `throttleAdapterEnhancer`.
+`cacheAdapterEnhancer` enhances the given adapter and return a new cacheable adapter back, so you can compose it with any other enhancers, e.g.  `throttleAdapterEnhancer`.
 
 #### basic usage
 
@@ -142,17 +142,21 @@ http.get('/users', { cache: cacheA, forceUpdate: true });
 > throttle requests most once per threshold milliseconds
 
 ```
-throttleAdapterEnhancer(adapter, options) : enhancedAdapter
+throttleAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
 ```
 
-Where `adapter` is an axios adapter that will be throttled, `options` is an optional object that configuring throttling: 
+Where `adapter` is an axios adapter which following the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), `options` is an optional object that configuring throttling: 
 
-| Param | Default value | Description | 
-| --- | --- | --- |
-| `threshold` |  `1000` | The number of milliseconds to throttle request invocations to |
-| `cache` | <nobr>`new LRUCache({ max: 10 })`</nobr> | Cache object that will be used for storing throttled requests |
+| Param     | Type |Default value               | Description                                                  |
+| --------- | ---- |--------------------------- | ------------------------------------------------------------ |
+| threshold | number |1000                        | The number of milliseconds to throttle request invocations to |
+| cache     | CacheLike |<pre>new LRUCache({ max: 10 })</pre> | CacheLike instance that will be used for storing throttled requests |
 
-`throttleAdapterEnhancer` enhances axios adapter and return it back. So you can use this adapter for another purpose, e.g. cache using `cacheAdapterEnhancer`.
+Basically we recommend using the `throttleAdapterEnhancer` with `cacheAdapterEnhancer` together for the maximum caching benifits.
+
+```js
+throttleAdapterEnhancer(cacheAdapterEnhancer(axios.defaults.adapter))
+```
 
 Check [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/) to learn more details about throttle and how it differs from debounce.
 
