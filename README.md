@@ -71,7 +71,7 @@ Where `adapter` is an axios adapter that will be cached, `options` is an optiona
 | Param | Default value | Description | 
 | --- | --- | --- |
 | `enabledByDefault` |  `true` | Enables cache for all requests without explicit definition in every request (e.g. `cache: true`) |
-| `cacheFlag` | `cache` | Configures key (flag) for explicit definition of cache usage in axios request |
+| `cacheFlag` | `'cache'` | Configures key (flag) for explicit definition of cache usage in axios request |
 | `defaultCache` | `new LRUCache({ maxAge: FIVE_MINUTES })` | Cache object that will be used for storing cached requests |
 
 `cacheAdapterEnhancer` enhances axios adapter and return it back. So you can use this adapter for another purpose, e.g. throttle using `throttleAdapterEnhancer`.
