@@ -72,7 +72,7 @@ Where `adapter` is an axios adapter which following the [axios adapter standard]
 | cacheFlag        | string                            | 'cache' | Configures key (flag) for explicit definition of cache usage in axios request |
 | defaultCache     | CacheLike | <pre>new LRUCache({ maxAge: FIVE_MINUTES })</pre> | a CacheLike instance that will be used for storing requests by default, except you define a custom Cache with your request config |
 
-`cacheAdapterEnhancer` enhances the given adapter and return a new cacheable adapter back, so you can compose it with any other enhancers, e.g.  `throttleAdapterEnhancer`.
+`cacheAdapterEnhancer` enhances the given adapter and returns a new cacheable adapter back, so you can compose it with any other enhancers, e.g.  `throttleAdapterEnhancer`.
 
 #### basic usage
 
