@@ -1,6 +1,6 @@
 {
   "name": "axios-extensions",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "make axios great again",
   "homepage": "https://github.com/kuitos/axios-extensions",
   "repository": "https://github.com/kuitos/axios-extensions.git",
@@ -33,14 +33,17 @@
   },
   "dependencies": {
     "@types/lru-cache": "^4.1.0",
-    "axios": "*",
     "lru-cache": "^4.1.1",
     "tslib": "^1.9.0"
+  },
+  "peerDependencies": {
+    "axios": "*"
   },
   "devDependencies": {
     "@types/node": "^10.0.3",
     "@types/sinon": "^4.3.1",
     "ava": "^0.24.0",
+    "axios": "^0.18.0",
     "babel-cli": "^6.26.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "babel-plugin-transform-runtime": "^6.23.0",
