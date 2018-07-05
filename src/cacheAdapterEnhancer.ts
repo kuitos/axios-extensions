@@ -10,6 +10,7 @@ import buildSortedURL from './utils/buildSortedURL';
 import isCacheLike from './utils/isCacheLike';
 
 const FIVE_MINUTES = 1000 * 60 * 5;
+const CAPACITY = 100;
 
 export interface ICacheLike<T> {
 	get(key: string): T | undefined;
@@ -28,7 +29,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 	const {
 		enabledByDefault = true,
 		cacheFlag = 'cache',
-		defaultCache = new LRUCache<string, AxiosPromise>({ maxAge: FIVE_MINUTES }),
+		defaultCache = new LRUCache<string, AxiosPromise>({ maxAge: FIVE_MINUTES, max: CAPACITY }),
 	} = options;
 
 	return (config: any) => {
@@ -74,7 +75,6 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 			}
 
 			return responsePromise;
-
 		}
 
 		return adapter(config);
