@@ -52,9 +52,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 				responsePromise = (async () => {
 
 					try {
-						const response = await adapter(config);
-						cache.set(index, Promise.resolve(response));
-						return response;
+						return await adapter(config);
 					} catch (reason) {
 						cache.del(index);
 						throw reason;
