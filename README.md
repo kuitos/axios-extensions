@@ -10,8 +10,8 @@ A non-invasive, simple, reliable collection of axios extension
 ## Extension List
 *v3.x has a lot of api changes, if you are looking for v2.x doc, see [here](https://github.com/kuitos/axios-extensions/tree/v2.0.3)*
 
-* [cacheAdapterEnhancer](#cacheadapterenhancer) make request cacheable
-* [throttleAdapterEnhancer](#throttleadapterenhancer) make request throttled automatic
+* [cacheAdapterEnhancer](#cacheadapterenhancer) makes request cacheable
+* [throttleAdapterEnhancer](#throttleadapterenhancer) makes request throttled automatically
 
 ## Installing
 ```bash
@@ -38,7 +38,7 @@ const http = axios.create({
 
 ### Enable Logging
 
-It is highly recommended to enable the request logging recorder in development environment(it is disabled in default).
+It is highly recommended to enable the request logging recorder in development environment(disabled by default).
 
 #### browser (webpack)
 ```js
