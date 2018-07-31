@@ -137,6 +137,8 @@ http.get('/users', { cache: cacheB });
 http.get('/users', { cache: cacheA, forceUpdate: true });
 ```
 
+*Note: If you are using typescript, do not forget to enable `"esModuleInterop": true` and `"allowSyntheticDefaultImports": true` for better development experience.*
+
 ### throttleAdapterEnhancer
 
 > throttle requests most once per threshold milliseconds
