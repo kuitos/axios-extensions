@@ -154,7 +154,7 @@ Where `adapter` is an axios adapter which following the [axios adapter standard]
 | threshold | number |1000                        | The number of milliseconds to throttle request invocations to |
 | cache     | CacheLike |<pre>new LRUCache({ max: 10 })</pre> | CacheLike instance that will be used for storing throttled requests |
 
-Basically we recommend using the `throttleAdapterEnhancer` with `cacheAdapterEnhancer` together for the maximum caching benifits.
+Basically we recommend using the `throttleAdapterEnhancer` with `cacheAdapterEnhancer` together for the maximum caching benefits.
 
 ```js
 throttleAdapterEnhancer(cacheAdapterEnhancer(axios.defaults.adapter))
