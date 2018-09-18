@@ -47,7 +47,7 @@
     "babel-cli": "^6.26.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "babel-plugin-transform-runtime": "^6.23.0",
-    "codecov": "^3.0.0",
+    "codecov": "^3.1.0",
     "husky": "^0.14.1",
     "nyc": "^11.4.1",
     "sinon": "^5.0.3",
