@@ -39,7 +39,7 @@ export default function throttleAdapterEnhancer(adapter: AxiosAdapter, options: 
 				return response;
 			} catch (reason) {
 				cache.del(index);
-				return Promise.reject(reason);
+				throw reason;
 			}
 
 		})();
