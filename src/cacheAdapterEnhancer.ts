@@ -78,3 +78,9 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 		return adapter(config);
 	};
 }
+
+declare module 'axios' {
+	interface AxiosRequestConfig {
+		cache?: boolean | true;
+	}
+}
