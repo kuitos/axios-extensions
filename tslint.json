@@ -23,6 +23,7 @@
 	  "always"
 	],
 	"member-access": false,
+	  "interface-name": false,
 	"member-ordering": [
 	  true,
 	  {

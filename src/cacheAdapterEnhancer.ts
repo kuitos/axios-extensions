@@ -14,7 +14,9 @@ const CAPACITY = 100;
 
 export interface ICacheLike<T> {
 	get(key: string): T | undefined;
+
 	set(key: string, value: T, maxAge?: number): boolean;
+
 	del(key: string): void;
 }
 
@@ -32,7 +34,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 		defaultCache = new LRUCache<string, AxiosPromise>({ maxAge: FIVE_MINUTES, max: CAPACITY }),
 	} = options;
 
-	return (config: any) => {
+	return config => {
 
 		const { url, method, params, paramsSerializer, forceUpdate } = config;
 		const useCache = (config[cacheFlag] !== void 0 && config[cacheFlag] !== null) ? config[cacheFlag] : enabledByDefault;
@@ -77,10 +79,4 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 
 		return adapter(config);
 	};
-}
-
-declare module 'axios' {
-	interface AxiosRequestConfig {
-		cache?: boolean | true;
-	}
 }

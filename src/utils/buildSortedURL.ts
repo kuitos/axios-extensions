@@ -4,6 +4,7 @@
  * @since 2017-10-12
  */
 
+// @ts-ignore
 import buildURL from 'axios/lib/helpers/buildURL';
 
 export default function buildSortedURL(...args: any[]) {
