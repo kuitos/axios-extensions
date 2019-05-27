@@ -65,6 +65,6 @@
     "typescript": "^2.8.1"
   },
   "ava": {
-    "files": "dist/lib/**/__tests__/**/*.js"
+    "files": "lib/**/__tests__/**/*.js"
   }
 }
