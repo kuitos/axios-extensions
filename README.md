@@ -22,6 +22,12 @@ or
 yarn add axios-extensions
 ```
 
+or 
+```html
+// exposed as window['axios-extensions']
+<script src="https://unpkg.com/axios-extensions/dist/axios-extensions.min.js"></script>
+```
+
 ## Usage
 
 ```javascript

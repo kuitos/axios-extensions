@@ -10,10 +10,6 @@ script:
 after_success:
   - npm run codecov
 
-before_deploy:
-  - npm run build
-  - cp {package.json,README.md,LICENSE,.npmignore} dist
-  - cd dist
 deploy:
   provider: npm
   email: kuitos.lau@gmail.com
