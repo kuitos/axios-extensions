@@ -5,3 +5,5 @@ coverage.lcov
 coverage/
 node_modules/
 dist/
+esm/
+lib/
