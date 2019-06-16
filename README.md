@@ -10,6 +10,8 @@ A non-invasive, simple, reliable collection of axios extension
 ## Extension List
 *v3.x has a lot of api changes, if you are looking for v2.x doc, see [here](https://github.com/kuitos/axios-extensions/tree/v2.0.3)*
 
+*Not working with axios v0.19.0 as its custom config bug, See https://github.com/axios/axios/pull/2207.*   
+
 * [cacheAdapterEnhancer](#cacheadapterenhancer) makes request cacheable
 * [throttleAdapterEnhancer](#throttleadapterenhancer) makes request throttled automatically
 
