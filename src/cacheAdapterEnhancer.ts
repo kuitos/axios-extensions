@@ -34,7 +34,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 		defaultCache = new LRUCache<string, AxiosPromise>({ maxAge: FIVE_MINUTES, max: CAPACITY }),
 	} = options;
 
-	return config => {
+	return async config => {
 
 		const { url, method, params, paramsSerializer, forceUpdate } = config;
 		const useCache = (config[cacheFlag] !== void 0 && config[cacheFlag] !== null) ? config[cacheFlag] : enabledByDefault;
@@ -47,20 +47,17 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 			// build the index according to the url and params
 			const index = buildSortedURL(url, params, paramsSerializer);
 
-			let responsePromise = cache.get(index);
-
+			let responsePromise = Promise.resolve(cache.get(index));
+			responsePromise = await responsePromise;
+			
 			if (!responsePromise || forceUpdate) {
 
-				responsePromise = (async () => {
-
-					try {
-						return await adapter(config);
-					} catch (reason) {
-						cache.del(index);
-						throw reason;
-					}
-
-				})();
+				try {
+				    responsePromise = await adapter(config);
+				} catch (reason) {
+				    cache.del(index);
+				    throw reason;
+				}
 
 				// put the promise for the non-transformed response into cache as a placeholder
 				cache.set(index, responsePromise);
