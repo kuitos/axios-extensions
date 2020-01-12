@@ -7,9 +7,15 @@
 import Cache from 'lru-cache';
 import cacheAdapterEnhancer from './cacheAdapterEnhancer';
 import throttleAdapterEnhancer from './throttleAdapterEnhancer';
+import buildSortedURL from './utils/buildSortedURL';
+import isCacheLike from './utils/isCacheLike';
 
 export {
 	Cache,
 	cacheAdapterEnhancer,
 	throttleAdapterEnhancer,
+	utils: {
+		buildSortedURL,
+		isCacheLike,
+	},
 };
