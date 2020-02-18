@@ -14,6 +14,7 @@ A non-invasive, simple, reliable collection of axios extension
 
 * [cacheAdapterEnhancer](#cacheadapterenhancer) makes request cacheable
 * [throttleAdapterEnhancer](#throttleadapterenhancer) makes request throttled automatically
+* [retryAdapterEnhancer](#retryadapterenhancer) makes request retry with special times while it failed
 
 ## Installing
 ```bash
@@ -68,7 +69,7 @@ new webpack.DefinePlugin({
 
 > Makes axios cacheable
 
-```
+```typescript
 cacheAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
 ```
 
@@ -149,9 +150,9 @@ http.get('/users', { cache: cacheA, forceUpdate: true });
 
 ### throttleAdapterEnhancer
 
-> throttle requests most once per threshold milliseconds
+> Throttle requests most once per threshold milliseconds
 
-```
+```ts
 throttleAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
 ```
 
@@ -190,3 +191,36 @@ setTimeout(() => {
 	http.get('/users'); // after 2s, the real request makes again
 }, 2 * 1000);
 ```
+
+### retryAdatperEnhancer
+
+> Retry the failed request with special times
+
+```ts
+retryAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
+```
+
+Where `adapter` is an axios adapter which following the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), `options` is an optional that configuring caching: 
+| Param            | Type | Default value                            | Description                                                  |
+| ---------------- | ---------------------------------------- | ------------------------------------------------------------ | ---- |
+| times | number                         | 2 | Enables cache for all requests without explicit definition in request config (e.g. `cache: true`) |
+
+#### basic usage
+
+```ts
+import axios from 'axios';
+import { retryAdapterEnhancer } from 'axios-extensions';
+
+const http = axios.create({
+	baseURL: '/',
+	headers: { 'Cache-Control': 'no-cache' },
+	adapter: retryAdapterEnhancer(axios.defaults.adapter)
+});
+
+// this request will retry two times if it failed
+http.get('/users');
+
+// you could also set the retry times for a special request
+http.get('/special', { retryTimes: 3 });
+```
+
