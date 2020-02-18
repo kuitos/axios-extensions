@@ -203,7 +203,7 @@ retryAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
 Where `adapter` is an axios adapter which following the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), `options` is an optional that configuring caching: 
 | Param            | Type | Default value                            | Description                                                  |
 | ---------------- | ---------------------------------------- | ------------------------------------------------------------ | ---- |
-| times | number                         | 2 | Enables cache for all requests without explicit definition in request config (e.g. `cache: true`) |
+| times | number                         | 2 | Set the retry times for failed request globally. |
 
 #### basic usage
 
