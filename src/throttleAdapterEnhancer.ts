@@ -68,7 +68,7 @@ export default function throttleAdapterEnhancer(adapter: AxiosAdapter, options: 
 				if (responsePromise) {
 
 					/* istanbul ignore next */
-					if (process.env.LOGGER_LEVEL === 'info') {
+					if (process.env.NODE_ENV === 'development' || process.env.LOGGER_LEVEL === 'info') {
 						// eslint-disable-next-line no-console
 						console.info(`request cached by throttle adapter: ${index}`);
 					}
