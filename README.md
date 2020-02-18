@@ -192,7 +192,7 @@ setTimeout(() => {
 }, 2 * 1000);
 ```
 
-### retryAdatperEnhancer
+### retryAdapterEnhancer
 
 > Retry the failed request with special times
 
