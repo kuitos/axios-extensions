@@ -32,7 +32,11 @@ test('should return the result immediately while the request succeed', async (t)
 	const spyFn = spy();
 	const mockedAdapter = (config: any) => {
 		spyFn();
-		return Promise.resolve(config);
+		if (spyFn.calledTwice) {
+			return Promise.resolve(config);
+		}
+
+		return Promise.reject(config);
 	};
 	const http = axios.create({
 		adapter: retryAdapterEnhancer(mockedAdapter),
@@ -40,7 +44,7 @@ test('should return the result immediately while the request succeed', async (t)
 
 	await http.get('/test');
 
-	t.truthy(spyFn.calledOnce);
+	t.truthy(spyFn.calledTwice);
 });
 
 test('should throw an exception while request still failed after retry', async (t) => {
