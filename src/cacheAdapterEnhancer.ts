@@ -9,6 +9,13 @@ import LRUCache from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
 import isCacheLike from './utils/isCacheLike';
 
+declare module 'axios' {
+	interface AxiosRequestConfig {
+		forceUpdate?: boolean;
+		cache?: boolean | ICacheLike<any>;
+	}
+}
+
 const FIVE_MINUTES = 1000 * 60 * 5;
 const CAPACITY = 100;
 
@@ -37,7 +44,9 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 	return config => {
 
 		const { url, method, params, paramsSerializer, forceUpdate } = config;
-		const useCache = (config[cacheFlag] !== void 0 && config[cacheFlag] !== null) ? config[cacheFlag] : enabledByDefault;
+		const useCache = ((config as any)[cacheFlag] !== void 0 && (config as any)[cacheFlag] !== null)
+			? (config as any)[cacheFlag]
+			: enabledByDefault;
 
 		if (method === 'get' && useCache) {
 
