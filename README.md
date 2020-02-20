@@ -116,6 +116,20 @@ http.get('/users', { useCache: true }); // make the request cacheable(real http 
 http.get('/users', { useCache: true }); // use the response cache from previous request
 ```
 
+##### custom cache typing
+
+Note that if you are using custom cache flag and typescript, you may need to add the typing declaration like below:
+
+```ts
+import { ICacheLike } from 'axios-extensions';
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    // if your cacheFlag was setting to 'useCache'
+    useCache?: boolean | ICacheLike<any>;
+  }
+}
+```
+
 #### more advanced
 
 Besides configuring the request through the `cacheAdapterEnhancer`, we can enjoy more advanced features via configuring every individual request.

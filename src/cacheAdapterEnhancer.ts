@@ -9,6 +9,13 @@ import LRUCache from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
 import isCacheLike from './utils/isCacheLike';
 
+declare module 'axios' {
+	interface AxiosRequestConfig {
+		forceUpdate?: boolean;
+		cache?: boolean | ICacheLike<any>;
+	}
+}
+
 const FIVE_MINUTES = 1000 * 60 * 5;
 const CAPACITY = 100;
 
