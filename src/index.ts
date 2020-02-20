@@ -5,12 +5,13 @@
  */
 
 import Cache from 'lru-cache';
-import cacheAdapterEnhancer from './cacheAdapterEnhancer';
+import cacheAdapterEnhancer, { ICacheLike } from './cacheAdapterEnhancer';
 import retryAdapterEnhancer from './retryAdapterEnhancer';
 import throttleAdapterEnhancer from './throttleAdapterEnhancer';
 
 export {
 	Cache,
+	ICacheLike,
 	cacheAdapterEnhancer,
 	throttleAdapterEnhancer,
 	retryAdapterEnhancer,

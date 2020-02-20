@@ -5,6 +5,12 @@
 
 import { AxiosAdapter, AxiosResponse } from 'axios';
 
+declare module 'axios' {
+	interface AxiosRequestConfig {
+		retryTimes?: number;
+	}
+}
+
 export type Options = {
 	times?: number;
 };
