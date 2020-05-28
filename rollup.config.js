@@ -6,7 +6,7 @@
 const resolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
 const builtin = require('rollup-plugin-node-builtins');
-const uglify = require('rollup-plugin-uglify').uglify;
+const terser = require('rollup-plugin-terser').terser;
 
 function genConfig(minimize = false) {
 
@@ -23,7 +23,7 @@ function genConfig(minimize = false) {
 			resolve(),
 			commonjs(),
 			builtin(),
-			minimize ? uglify() : void 0,
+			minimize ? terser() : void 0,
 		],
 	};
 }
