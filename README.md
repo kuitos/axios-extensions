@@ -13,7 +13,7 @@ A non-invasive, simple, reliable collection of axios extension
 *Not working with axios v0.19.0 as its custom config bug, See https://github.com/axios/axios/pull/2207.*   
 
 * [cacheAdapterEnhancer](#cacheadapterenhancer) makes request cacheable
-* [throttleAdapterEnhancer](#throttleadapterenhancer) makes request throttled automatically
+* [throttleAdapterEnhancer](#throttleadapterenhancer) makes GET requests throttled automatically
 * [retryAdapterEnhancer](#retryadapterenhancer) makes request retry with special times while it failed
 
 ## Installing
@@ -164,7 +164,7 @@ http.get('/users', { cache: cacheA, forceUpdate: true });
 
 ### throttleAdapterEnhancer
 
-> Throttle requests most once per threshold milliseconds
+> Throttle GET requests most once per threshold milliseconds
 
 ```ts
 throttleAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
@@ -178,6 +178,7 @@ Where `adapter` is an axios adapter which following the [axios adapter standard]
 | cache     | CacheLike |<pre>new LRUCache({ max: 10 })</pre> | CacheLike instance that will be used for storing throttled requests |
 
 Basically we recommend using the `throttleAdapterEnhancer` with `cacheAdapterEnhancer` together for the maximum caching benefits.
+Note that POST and other methods besides GET are not affected. 
 
 ```js
 throttleAdapterEnhancer(cacheAdapterEnhancer(axios.defaults.adapter))
