@@ -35,13 +35,23 @@ or
 
 ```javascript
 import axios from 'axios';
-import { cacheAdapterEnhancer, throttleAdapterEnhancer } from 'axios-extensions';
+import { cacheAdapterEnhancer, throttleAdapterEnhancer, AdapterBuilder } from 'axios-extensions';
 
 // enhance the original axios adapter with throttle and cache enhancer 
 const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
 	adapter: throttleAdapterEnhancer(cacheAdapterEnhancer(axios.defaults.adapter))
+});
+
+// enhance adapter more simpler with various enhancer
+const http2 = axios.create({
+	baseURL: '/',
+	headers: { 'Cache-Control': 'no-cache' },
+	adapter: new AdapterBuilder(axios.defaults.adapter)
+            .enhance(throttleAdapterEnhancer)
+            .enhance(cacheAdapterEnhancer, { enabledByDefault: false, cacheFlag: 'useCache'})
+            .build()
 });
 ```
 
