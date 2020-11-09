@@ -8,12 +8,12 @@ import Cache from 'lru-cache';
 import cacheAdapterEnhancer, { ICacheLike } from './cacheAdapterEnhancer';
 import retryAdapterEnhancer from './retryAdapterEnhancer';
 import throttleAdapterEnhancer from './throttleAdapterEnhancer';
-import AdapterBuilder from './utils/AdapterBuilder';
+import enhancerComposer from './utils/enhancerComposer';
 
 export {
 	Cache,
 	ICacheLike,
-	AdapterBuilder,
+	enhancerComposer,
 	cacheAdapterEnhancer,
 	throttleAdapterEnhancer,
 	retryAdapterEnhancer,

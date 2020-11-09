@@ -5,7 +5,7 @@ import { spy } from 'sinon';
 import cacheAdapterEnhancer from '../../cacheAdapterEnhancer';
 import retryAdapterEnhancer from '../../retryAdapterEnhancer';
 import throttleAdapterEnhancer from '../../throttleAdapterEnhancer';
-import AdapterBuilder from '../AdapterBuilder';
+import enhancerComposer from '../enhancerComposer';
 
 test('adapter must perform normal operation of all enhancers', async t => {
 
@@ -43,11 +43,11 @@ test('adapter must perform normal operation of all enhancers', async t => {
 	};
 
 	const http = axios.create({
-		adapter: new AdapterBuilder(mockedAdapter)
-			.enhance(retryAdapterEnhancer, { times: retryTimes })
-			.enhance(throttleAdapterEnhancer, { threshold: throttleThreshold })
-			.enhance(cacheAdapterEnhancer, { enabledByDefault: true })
-			.build(),
+		adapter: enhancerComposer(retryAdapterEnhancer, throttleAdapterEnhancer, cacheAdapterEnhancer)(mockedAdapter, {
+			times: retryTimes,
+			threshold: throttleThreshold,
+			enabledByDefault: true,
+		}),
 	});
 
 	// retry test

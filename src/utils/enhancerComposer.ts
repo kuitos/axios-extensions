@@ -23,20 +23,8 @@ type ExtractOptions<E extends Enhancer, O extends EnhancerWithOptions> = O exten
 	: never;
 type Options<E extends Enhancer> = ExtractOptions<E, EnhancerWithOptions>;
 
-export default class AdapterBuilder {
-
-	public adapter: AxiosAdapter;
-
-	constructor(adapter: AxiosAdapter) {
-		this.adapter = adapter;
-	}
-
-	public enhance<E extends Enhancer, O extends Options<E>>(enhancer: E, options?: O) {
-		this.adapter = enhancer(this.adapter, options);
-		return this;
-	}
-
-	public build() {
-		return this.adapter;
-	}
+export default function(...enhancers: Enhancer[]) {
+	return enhancers.reduce((prevEnhancer, nextEnhancer) => {
+		return (adapter: AxiosAdapter, options?: Options<any>) => (nextEnhancer(prevEnhancer(adapter, options), options));
+	});
 }

@@ -35,7 +35,7 @@ or
 
 ```javascript
 import axios from 'axios';
-import { cacheAdapterEnhancer, throttleAdapterEnhancer, AdapterBuilder } from 'axios-extensions';
+import { cacheAdapterEnhancer, throttleAdapterEnhancer, enhancerComposer } from 'axios-extensions';
 
 // enhance the original axios adapter with throttle and cache enhancer 
 const http = axios.create({
@@ -48,10 +48,10 @@ const http = axios.create({
 const http2 = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
-	adapter: new AdapterBuilder(axios.defaults.adapter)
-            .enhance(throttleAdapterEnhancer)
-            .enhance(cacheAdapterEnhancer, { enabledByDefault: false, cacheFlag: 'useCache'})
-            .build()
+	adapter: enhancerComposer(throttleAdapterEnhancer, cacheAdapterEnhancer)(axios.defaults.adapter, {
+			enabledByDefault: true,
+			cacheFlag: 'useCache',
+		})
 });
 ```
 
