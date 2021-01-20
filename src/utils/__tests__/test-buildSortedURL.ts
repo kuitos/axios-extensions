@@ -4,7 +4,7 @@
  * @since 2017-10-17
  */
 
-import { test } from 'ava';
+import test from 'ava';
 import buildSortedURL from '../buildSortedURL';
 
 test('build a simple url without params', t => {

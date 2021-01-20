@@ -4,7 +4,7 @@
  * @since 2017-10-16
  */
 
-import { test } from 'ava';
+import test from 'ava';
 import axios from 'axios';
 import LRUCache from 'lru-cache';
 import { spy } from 'sinon';
