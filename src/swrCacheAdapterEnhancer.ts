@@ -102,7 +102,6 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 						}
 						return response;
 					} catch (reason) {
-						cache.del(index);
 						throw reason;
 					}
 				})();
