@@ -76,30 +76,30 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 				cache.set(index, responsePromise);
 
 				/* istanbul ignore next */
-				// if (process.env.LOGGER_LEVEL === 'info') {
+				if (process.env.LOGGER_LEVEL === 'info') {
 					// eslint-disable-next-line no-console
 					console.info(`[axios-extensions] request cached by cache adapter --> url: ${index}`);
-				// }
+				}
 
 				return responsePromise;
 			}
 
 			if (useSWR) {
 				/* istanbul ignore next */
-				// if (process.env.LOGGER_LEVEL === 'info') {
+				if (process.env.LOGGER_LEVEL === 'info') {
 					// eslint-disable-next-line no-console
 					console.info(`[axios-extensions] Steal-While-Revalidate for request --> url: ${index}`);
-				// }
+				}
 
 				let swrResponsePromise = (async () => {
 
 					try {
 						const response = await adapter(config);
 						/* istanbul ignore next */
-						// if (process.env.LOGGER_LEVEL === 'info') {
+						if (process.env.LOGGER_LEVEL === 'info') {
 							// eslint-disable-next-line no-console
 							console.info(`[axios-extensions] cache revalidate from response --> url: ${index}`);
-						// }
+						}
 						return response;
 					} catch (reason) {
 						cache.del(index);
@@ -112,10 +112,10 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 			}
 
 			/* istanbul ignore next */
-			// if (process.env.LOGGER_LEVEL === 'info') {
+			if (process.env.LOGGER_LEVEL === 'info') {
 				// eslint-disable-next-line no-console
 				console.info(`[axios-extensions] request responded with cached --> url: ${index}`);
-			// }
+			}
 
 			return responsePromise;
 		}
