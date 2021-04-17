@@ -6,6 +6,7 @@
 
 import Cache from 'lru-cache';
 import cacheAdapterEnhancer, { ICacheLike } from './cacheAdapterEnhancer';
+import swrCacheAdapterEnhancer from './swrCacheAdapterEnhancer';
 import retryAdapterEnhancer from './retryAdapterEnhancer';
 import throttleAdapterEnhancer from './throttleAdapterEnhancer';
 
@@ -15,4 +16,5 @@ export {
 	cacheAdapterEnhancer,
 	throttleAdapterEnhancer,
 	retryAdapterEnhancer,
+	swrCacheAdapterEnhancer,
 };
