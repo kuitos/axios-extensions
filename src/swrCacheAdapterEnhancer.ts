@@ -13,7 +13,7 @@ declare module 'axios' {
 	interface AxiosRequestConfig {
 		forceUpdate?: boolean;
 		cache?: boolean | ICacheLike<any>;
-		useSWR?: boolean;
+		stealWhileRevalidate?: boolean | number;
 	}
 }
 
@@ -32,6 +32,7 @@ export type Options = {
 	enabledByDefault?: boolean,
 	cacheFlag?: string,
 	defaultCache?: ICacheLike<AxiosPromise>,
+	swrCache?: ICacheLike<Date>,
 };
 
 export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Options = {}): AxiosAdapter {
@@ -40,11 +41,12 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 		enabledByDefault = true,
 		cacheFlag = 'cache',
 		defaultCache = new LRUCache<string, AxiosPromise>({ maxAge: FIVE_MINUTES, max: CAPACITY }),
+		swrCache = new LRUCache<string, Date>({ maxAge: FIVE_MINUTES, max: CAPACITY }),
 	} = options;
 
 	return config => {
 
-		const { url, method, params, paramsSerializer, forceUpdate, useSWR = true } = config;
+		const { url, method, params, paramsSerializer, forceUpdate, stealWhileRevalidate = true } = config;
 		const useCache = ((config as any)[cacheFlag] !== void 0 && (config as any)[cacheFlag] !== null)
 			? (config as any)[cacheFlag]
 			: enabledByDefault;
@@ -59,12 +61,22 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 
 			let responsePromise = cache.get(index);
 
+			// console.info(responsePromise);
+
 			if (!responsePromise || forceUpdate) {
 
 				responsePromise = (async () => {
 
 					try {
-						return await adapter(config);
+						const response = await adapter(config);
+
+						if (stealWhileRevalidate as boolean && typeof(stealWhileRevalidate) === "number" && stealWhileRevalidate as number > 0) {
+							const now: Date = new Date();
+							now.setMilliseconds(now.getMilliseconds() + (stealWhileRevalidate as number));
+							swrCache.set(index, now);
+						}
+
+						return response;
 					} catch (reason) {
 						cache.del(index);
 						throw reason;
@@ -76,46 +88,74 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 				cache.set(index, responsePromise);
 
 				/* istanbul ignore next */
-				if (process.env.LOGGER_LEVEL === 'info') {
+				// if (process.env.LOGGER_LEVEL === 'info') {
 					// eslint-disable-next-line no-console
 					console.info(`[axios-extensions] request cached by cache adapter --> url: ${index}`);
-				}
+				// }
 
 				return responsePromise;
 			}
 
-			if (useSWR) {
-				/* istanbul ignore next */
-				if (process.env.LOGGER_LEVEL === 'info') {
-					// eslint-disable-next-line no-console
-					console.info(`[axios-extensions] Steal-While-Revalidate for request --> url: ${index}`);
-				}
+			if (stealWhileRevalidate as boolean) {
 
-				let swrResponsePromise = (async () => {
+				if (typeof(stealWhileRevalidate) === "number" && stealWhileRevalidate as number > 0) {
+					let expiredDate = swrCache.get(index);
 
-					try {
-						const response = await adapter(config);
-						/* istanbul ignore next */
-						if (process.env.LOGGER_LEVEL === 'info') {
-							// eslint-disable-next-line no-console
-							console.info(`[axios-extensions] cache revalidate from response --> url: ${index}`);
-						}
-						return response;
-					} catch (reason) {
-						throw reason;
+					if (!expiredDate || expiredDate < new Date ) {
+						let swrResponsePromise = (async () => {
+
+							try {
+								const response = await adapter(config);
+
+								const now: Date = new Date();
+								now.setMilliseconds(now.getMilliseconds() + (stealWhileRevalidate as number));
+								swrCache.set(index, now);
+
+								/* istanbul ignore next */
+								// if (process.env.LOGGER_LEVEL === 'info') {
+									// eslint-disable-next-line no-console
+									console.info(`[axios-extensions] cache revalidate from response after expired keep alive --> url: ${index}`);
+								// }
+
+								return response;
+							} catch (reason) {
+								cache.del(index);
+								swrCache.del(index);
+								throw reason;
+							}
+						})();
+
+						// put the promise for the non-transformed response into cache as a placeholder
+						cache.set(index, swrResponsePromise);
 					}
-				})();
+				} else {
+					let swrResponsePromise = (async () => {
 
-				// put the promise for the non-transformed response into cache as a placeholder
-				cache.set(index, swrResponsePromise);
+						try {
+							const response = await adapter(config);
+
+							/* istanbul ignore next */
+							// if (process.env.LOGGER_LEVEL === 'info') {
+								// eslint-disable-next-line no-console
+								console.info(`[axios-extensions] cache revalidate from response without keep alive --> url: ${index}`);
+							// }
+							return response;
+						} catch (reason) {
+							cache.del(index);
+							throw reason;
+						}
+					})();
+
+					// put the promise for the non-transformed response into cache as a placeholder
+					cache.set(index, swrResponsePromise);
+				}
 			}
 
 			/* istanbul ignore next */
-			if (process.env.LOGGER_LEVEL === 'info') {
+			// if (process.env.LOGGER_LEVEL === 'info') {
 				// eslint-disable-next-line no-console
 				console.info(`[axios-extensions] request responded with cached --> url: ${index}`);
-			}
-
+			// }
 			return responsePromise;
 		}
 
