@@ -61,24 +61,21 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 
 			let responsePromise = cache.get(index);
 
-			// console.info(responsePromise);
-
 			if (!responsePromise || forceUpdate) {
+
+				if (stealWhileRevalidate as boolean && typeof(stealWhileRevalidate) === "number" && stealWhileRevalidate as number > 0) {
+					const now: Date = new Date();
+					now.setMilliseconds(now.getMilliseconds() + (stealWhileRevalidate as number));
+					swrCache.set(index, now);
+				}
 
 				responsePromise = (async () => {
 
 					try {
-						const response = await adapter(config);
-
-						if (stealWhileRevalidate as boolean && typeof(stealWhileRevalidate) === "number" && stealWhileRevalidate as number > 0) {
-							const now: Date = new Date();
-							now.setMilliseconds(now.getMilliseconds() + (stealWhileRevalidate as number));
-							swrCache.set(index, now);
-						}
-
-						return response;
+						return await adapter(config);
 					} catch (reason) {
 						cache.del(index);
+						swrCache.del(index);
 						throw reason;
 					}
 
@@ -88,10 +85,10 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 				cache.set(index, responsePromise);
 
 				/* istanbul ignore next */
-				// if (process.env.LOGGER_LEVEL === 'info') {
+				if (process.env.LOGGER_LEVEL === 'info') {
 					// eslint-disable-next-line no-console
 					console.info(`[axios-extensions] request cached by cache adapter --> url: ${index}`);
-				// }
+				}
 
 				return responsePromise;
 			}
@@ -101,7 +98,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 				if (typeof(stealWhileRevalidate) === "number" && stealWhileRevalidate as number > 0) {
 					let expiredDate = swrCache.get(index);
 
-					if (!expiredDate || expiredDate < new Date ) {
+					if (!expiredDate || expiredDate < new Date() ) {
 						let swrResponsePromise = (async () => {
 
 							try {
@@ -112,10 +109,10 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 								swrCache.set(index, now);
 
 								/* istanbul ignore next */
-								// if (process.env.LOGGER_LEVEL === 'info') {
+								if (process.env.LOGGER_LEVEL === 'info') {
 									// eslint-disable-next-line no-console
 									console.info(`[axios-extensions] cache revalidate from response after expired keep alive --> url: ${index}`);
-								// }
+								}
 
 								return response;
 							} catch (reason) {
@@ -135,10 +132,10 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 							const response = await adapter(config);
 
 							/* istanbul ignore next */
-							// if (process.env.LOGGER_LEVEL === 'info') {
+							if (process.env.LOGGER_LEVEL === 'info') {
 								// eslint-disable-next-line no-console
 								console.info(`[axios-extensions] cache revalidate from response without keep alive --> url: ${index}`);
-							// }
+							}
 							return response;
 						} catch (reason) {
 							cache.del(index);
@@ -152,10 +149,10 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 			}
 
 			/* istanbul ignore next */
-			// if (process.env.LOGGER_LEVEL === 'info') {
+			if (process.env.LOGGER_LEVEL === 'info') {
 				// eslint-disable-next-line no-console
 				console.info(`[axios-extensions] request responded with cached --> url: ${index}`);
-			// }
+			}
 			return responsePromise;
 		}
 
