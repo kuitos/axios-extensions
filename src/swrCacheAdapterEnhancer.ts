@@ -106,7 +106,7 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 
 				const expiredDate = swrCache.get(index);
 
-				if (!expiredDate || expiredDate < new Date()) {
+				if (keepAlive === 0 || !expiredDate || expiredDate < new Date()) {
 
 					const revalidatedResponsePromise = (async () => {
 
