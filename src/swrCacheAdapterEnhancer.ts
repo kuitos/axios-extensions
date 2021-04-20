@@ -137,6 +137,15 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 
 					})();
 
+					// in the case of error occurred
+					revalidatedResponsePromise.catch(()=>{
+						/* istanbul ignore next */
+						if (process.env.LOGGER_LEVEL === 'info') {
+							// eslint-disable-next-line no-console
+							console.info(`[axios-extensions] request revalidation has an error! --> url: ${index}`);
+						}
+					});
+
 					cache.set(index, revalidatedResponsePromise);
 				}
 			}
