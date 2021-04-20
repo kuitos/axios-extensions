@@ -60,7 +60,7 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 			// if had provide a specified cache, then use it instead
 			const cache: ICacheLike<AxiosPromise> = isCacheLike(useCache) ? useCache : defaultCache;
 
-			// if had provide a specified cache, then use it instead
+			// if had provide a specified cache for SWR expire date, then use it instead
 			const swrCache: ICacheLike<Date> = isCacheLike(stealWhileRevalidate) ? stealWhileRevalidate : swrDefaultCache;
 
 			// build the index according to the url and params
@@ -75,11 +75,12 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 					try {
 						const response = await adapter(config);
 
+						// set expiration date to swrCache for revalidating the request on next call
 						if (stealWhileRevalidate) {
 							if (keepAlive > 0) {
-								const expiredDate: Date = new Date();
-								expiredDate.setMilliseconds(expiredDate.getMilliseconds() + keepAlive);
-								swrCache.set(index, expiredDate);
+								const expirationDate: Date = new Date();
+								expirationDate.setMilliseconds(expirationDate.getMilliseconds() + keepAlive);
+								swrCache.set(index, expirationDate);
 							} else {
 								swrCache.del(index);
 							}
@@ -100,6 +101,7 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 				return responsePromise;
 			}
 
+			// check if SWR is enabled, then revalidate after delivering the cache
 			if (stealWhileRevalidate) {
 
 				const expiredDate = swrCache.get(index);
@@ -108,13 +110,20 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 
 					const revalidatedResponsePromise = (async () => {
 
+						/* istanbul ignore next */
+						if (process.env.LOGGER_LEVEL === 'info') {
+							// eslint-disable-next-line no-console
+							console.info(`[axios-extensions] request revalidated --> url: ${index}`);
+						}
+
 						try {
 							const response = await adapter(config);
 
+							// set expiration date to swrCache for revalidating the request on next call
 							if (keepAlive > 0) {
-								const newExpiredDate: Date = new Date();
-								newExpiredDate.setMilliseconds(newExpiredDate.getMilliseconds() + keepAlive);
-								swrCache.set(index, newExpiredDate);
+								const newExpirationDate: Date = new Date();
+								newExpirationDate.setMilliseconds(newExpirationDate.getMilliseconds() + keepAlive);
+								swrCache.set(index, newExpirationDate);
 							} else {
 								swrCache.del(index);
 							}
@@ -130,6 +139,12 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 
 					cache.set(index, revalidatedResponsePromise);
 				}
+			}
+
+			/* istanbul ignore next */
+			if (process.env.LOGGER_LEVEL === 'info') {
+				// eslint-disable-next-line no-console
+				console.info(`[axios-extensions] request cached by cache adapter --> url: ${index}`);
 			}
 
 			return responsePromise;
