@@ -138,7 +138,7 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 					})();
 
 					// in the case of error occurred
-					revalidatedResponsePromise.catch(()=>{
+					revalidatedResponsePromise.catch(() => {
 						/* istanbul ignore next */
 						if (process.env.LOGGER_LEVEL === 'info') {
 							// eslint-disable-next-line no-console
