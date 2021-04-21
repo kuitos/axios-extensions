@@ -14,13 +14,13 @@ import {
 	spy,
 } from 'sinon';
 
-import swrCacheAdapterEnhancer from '../swrCacheAdapterEnhancer';
+import swrCacheAdapterEnhancer, { Cache } from '../swrCacheAdapterEnhancer';
 
 const delay = (timeout: number) => new Promise((r) => setTimeout(r, timeout));
 
 // mock the actual request
 const genMockAdapter = (cb: any) => async (config: any) => {
-	await delay(3);
+	await delay(5);
 	cb();
 	//  console.log("response");
 	if (config.error) {
@@ -46,7 +46,7 @@ test('cache adapter should cache request and revalidate it without flags', async
 		await http.get('/users').then(onSuccess);
 
         // delay some time (for revalidation occur)
-		await delay(5);
+		await delay(10);
 
 		if (i === 0) {
             // first time request call first (and cached)
@@ -68,14 +68,14 @@ test('cache adapter should cache request and revalidate it without flags', async
 
 	// cached request
 	await http.get('/users', { params: { name: 'kuitos' }, cache: true } as any).then(onSuccess);
- await delay(5);
+ await delay(10);
 	t.is(onSuccess.callCount, 7);
 	t.is(adapterCb.callCount, 7);
  t.is(adapterCb.getCall(0).calledBefore(onSuccess.getCall(0)), true);
 
 });
 
-test('cache adapter should cache request without stealWhileRevalidate', async t => {
+test('cache adapter should cache request without revalidate', async t => {
 
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
@@ -87,26 +87,28 @@ test('cache adapter should cache request without stealWhileRevalidate', async t 
 	const promises = [];
 
 	for (let i = 0; i < 5; i++) {
-		promises.push(http.get('/users', { stealWhileRevalidate: false }).then(onSuccess));
+		promises.push(http.get('/users', { revalidate: false }).then(onSuccess));
 	}
 
 	await Promise.all(promises);
+
+	await delay(10);
 
 	t.is(onSuccess.callCount, 5);
 	t.is(adapterCb.callCount, 1);
 	t.is(adapterCb.calledBefore(onSuccess), true);
 
-	await http.get('/users', { params: { name: 'kuitos' }, stealWhileRevalidate: false }).then(onSuccess);
+	await http.get('/users', { params: { name: 'kuitos' }, revalidate: false }).then(onSuccess);
 	t.is(onSuccess.callCount, 6);
 	t.is(adapterCb.callCount, 2);
 
-	await http.get('/users', { params: { name: 'kuitos' }, cache: true, stealWhileRevalidate: false } as any).then(onSuccess);
+	await http.get('/users', { params: { name: 'kuitos' }, cache: true, revalidate: false } as any).then(onSuccess);
 	t.is(onSuccess.callCount, 7);
 	t.is(adapterCb.callCount, 2);
 
 });
 
-test('cache adapter should cache request and revalidate based on keepAlive it without flags', async t => {
+test('cache adapter should cache request and revalidate it (based on expired date) without flags', async t => {
 
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
@@ -120,28 +122,28 @@ test('cache adapter should cache request and revalidate based on keepAlive it wi
 
 	for (let i = 0; i < 5; i++) {
         // call api
-		await http.get('/users', { keepAlive: 100 }).then(onSuccess);
+		await http.get('/users', { revalidate: 100 }).then(onSuccess);
 
         // delay some time (for revalidation occur)
-		await delay(5);
+		await delay(10);
 	}
 
 	t.is(onSuccess.callCount, 5);
 	t.is(adapterCb.callCount, 1); // 1x for caching
 
 	await delay(100);
-	await http.get('/users', { keepAlive: 100 }).then(onSuccess);
+	await http.get('/users', { revalidate: 100 }).then(onSuccess);
 	t.is(onSuccess.callCount, 6);
-	t.is(adapterCb.callCount, 1); // before revalidate (expired keepAlive)
-	await delay(5);
-	t.is(adapterCb.callCount, 2); // after revalidate (expired keepAlive)
+	t.is(adapterCb.callCount, 1); // before revalidate (expired)
+	await delay(10);
+	t.is(adapterCb.callCount, 2); // after revalidate (expired)
 
 	await delay(100);
 	await http.get('/users').then(onSuccess);
 	t.is(onSuccess.callCount, 7);
-	t.is(adapterCb.callCount, 2); // before revalidate (expired keepAlive)
-	await delay(5);
-	t.is(adapterCb.callCount, 3); // after revalidate (expired keepAlive)
+	t.is(adapterCb.callCount, 2); // before revalidate (expired)
+	await delay(10);
+	t.is(adapterCb.callCount, 3); // after revalidate (expired)
 });
 
 test('cache adapter shouldn\'t cache request with noCacheFlag', async t => {
@@ -176,7 +178,7 @@ test('cache will be removed when request error', async t => {
 	 http.get('/users', { error: true } as any).then(onSuccess, onError),
 	 http.get('/users').then(onSuccess, onError),
 	]);
-	await delay(5);
+	await delay(10);
 	// as the previous uses invocation failed, the following users request will respond with the rejected promise
 	t.is(onSuccess.callCount, 0);
 	t.is(onError.callCount, 2);
@@ -184,10 +186,10 @@ test('cache will be removed when request error', async t => {
 
 	for (let i = 0; i < 5; i++) {
         // call api
-		await http.get('/users', { keepAlive: 100 }).then(onSuccess, onError);
+		await http.get('/users', { revalidate: 100 }).then(onSuccess, onError);
 
         // delay some time (for revalidation occur)
-		await delay(5);
+		await delay(10);
 	}
 	t.is(onSuccess.callCount, 5);
 	t.is(adapterCb.callCount, 3);
@@ -198,7 +200,7 @@ test('cache will be removed when revalidate request error', async t => {
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
 	const http = axios.create({
-	 adapter: swrCacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true }),
+	 adapter: swrCacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true, revalidateFlag: 'reval' }),
 	});
 
 	const onSuccess = spy();
@@ -207,18 +209,18 @@ test('cache will be removed when revalidate request error', async t => {
 	 http.get('/users', { error: true } as any).then(onSuccess, onError),
 	 http.get('/users').then(onSuccess, onError),
 	]);
-	await delay(5);
+	await delay(10);
 	// as the previous uses invocation failed, the following users request will respond with the rejected promise
 	t.is(onSuccess.callCount, 0);
 	t.is(onError.callCount, 2);
 	t.is(adapterCb.callCount, 2);
 
-	await http.get('/users', { keepAlive: 20 }).then(onSuccess, onError);
-	await delay(25);
+	await http.get('/users', { reval: 25 } as any).then(onSuccess, onError);
+	await delay(50);
 
-	await http.get('/users', { error: true, keepAlive: 20 } as any).then(onSuccess, onError);
+	await http.get('/users', { error: true, reval: 25 } as any).then(onSuccess, onError);
 
-	await delay(5);
+	await delay(10);
 
 	t.is(onSuccess.callCount, 2); // cache served
 	t.is(onError.callCount, 2); // cache served (revalidate call after cache deliver so there is no error)
@@ -226,7 +228,7 @@ test('cache will be removed when revalidate request error', async t => {
 
 	// but there is no cache for now (cleaned in revalidation error)
 	http.get('/users').then(onSuccess, onError),
-	await delay(5);
+	await delay(10);
 	t.is(adapterCb.lastCall.calledBefore(onSuccess.lastCall), true);
 
  });
@@ -241,9 +243,11 @@ test('disable default cache switcher', async t => {
 
 	const onSuccess = spy();
 
-	await http.get('/users', { keepAlive: 5 }).then(onSuccess);
-	await http.get('/users', { keepAlive: 5 }).then(onSuccess);
+	await http.get('/users', { revalidate: 25 }).then(onSuccess);
+	await http.get('/users').then(onSuccess);
 	await http.get('/users', { cache: false } as any).then(onSuccess);
+
+	await delay(10);
 
 	t.is(onSuccess.callCount, 3);
 	t.is(adapterCb.callCount, 2);
@@ -254,43 +258,39 @@ test('request will refresh the cache with forceUpdate config', async t => {
 
 	 const adapterCb = spy();
 	 const mockedAdapter = genMockAdapter(adapterCb);
-	 const cache = new LRUCache<string, AxiosPromise>();
+	 const cache = new LRUCache<string, Cache>();
 	 const http = axios.create({
 		 adapter: swrCacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true, cacheFlag: 'cache', defaultCache: cache }),
 	 });
 
 	 const onSuccess = spy();
 	 await http.get('/users').then(onSuccess);
-	 const responed1 = await cache.get('/users') as any;
+	 const { responsePromise: responed1 } = await cache.get('/users') as any;
 	 await http.get('/users', { forceUpdate: true } as any).then(onSuccess);
-	 const responed2 = await cache.get('/users') as any;
+	 const { responsePromise: responed2 } = await cache.get('/users') as any;
 	 t.is(adapterCb.callCount, 2);
 	 t.is(onSuccess.callCount, 2);
-
-	 if (responed1) {
-		 t.is(responed1.url, '/users');
-		 t.is(responed1.url, responed2.url);
-	 }
 
 	 t.not(responed1, responed2);
 
  });
 
-test('request will refresh the SWR cache with forceUpdate config', async t => {
+test('request will revalidate the cache with forceRevalidate config', async t => {
 
 	 const adapterCb = spy();
 	 const mockedAdapter = genMockAdapter(adapterCb);
-	 const cache = new LRUCache<string, Date>();
+	 const cache = new LRUCache<string, Cache>();
 	 const http = axios.create({
-		 adapter: swrCacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true, swrDefaultCache: cache }),
+		 adapter: swrCacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true, defaultCache: cache }),
 	 });
 
 	 const onSuccess = spy();
-	 await http.get('/users', { keepAlive: 15 }).then(onSuccess);
-	 const responed1 = await cache.get('/users') as any;
-	 await delay(5);
-	 await http.get('/users', { forceUpdate: true, keepAlive: 15 } as any).then(onSuccess);
-	 const responed2 = await cache.get('/users') as any;
+	 await http.get('/users', { revalidate: 25 }).then(onSuccess);
+	 await delay(10);
+	 const { responsePromise: responed1 } = await cache.get('/users') as any;
+	 await http.get('/users', { forceRevalidate: true, revalidate: 25 } as any).then(onSuccess);
+	 await delay(10);
+	 const { responsePromise: responed2 } = await cache.get('/users') as any;
 	 t.is(adapterCb.callCount, 2);
 	 t.is(onSuccess.callCount, 2);
 
@@ -309,49 +309,20 @@ test('use a custom cache with request individual config', async t => {
 	const cache1 = new LRUCache();
 	const cache2 = new LRUCache();
 	await Promise.all([
-			http.get('/users', { cache: cache1, keepAlive: 15 } as any),
-			http.get('/users', { cache: cache2, keepAlive: 15 } as any),
+			http.get('/users', { cache: cache1, revalidate: 25 } as any),
+			http.get('/users', { cache: cache2, revalidate: 25 } as any),
 		]);
 
-	await delay(5);
+	await delay(10);
 	t.is(adapterCb.callCount, 2);
 
 	cache2.reset();
 	await Promise.all([
-		http.get('/users', { cache: cache1, keepAlive: 15 } as any),
-		http.get('/users', { cache: cache2, keepAlive: 15 } as any),
+		http.get('/users', { cache: cache1 } as any),
+		http.get('/users', { cache: cache2 } as any),
 	]);
 
-	await delay(5);
-	t.is(adapterCb.callCount, 3);
-
- });
-
-test('use a custom SWR cache with request individual config', async t => {
-
-	const adapterCb = spy();
-	const mockedAdapter = genMockAdapter(adapterCb);
-	const http = axios.create({
-	 adapter: swrCacheAdapterEnhancer(mockedAdapter, { stealWhileRevalidateFlag: 'swr', keepAliveFlag: 'alive' }),
-	});
-
-	const swrCache1 = new LRUCache();
-	const swrCache2 = new LRUCache();
-	await Promise.all([
-			http.get('/users', { swr: swrCache1, alive: 15 } as any),
-			http.get('/users', { swr: swrCache2, alive: 15 } as any),
-		]);
-
-	await delay(5);
-	t.is(adapterCb.callCount, 2);
-
-	swrCache2.reset();
-	await Promise.all([
-		http.get('/users', { swr: swrCache1, alive: 15 } as any),
-		http.get('/users', { swr: swrCache2, alive: 15 } as any),
-	]);
-
-	await delay(5);
+	await delay(10);
 	t.is(adapterCb.callCount, 3);
 
  });
