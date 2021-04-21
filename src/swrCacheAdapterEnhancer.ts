@@ -13,22 +13,25 @@ import isCacheLike from './utils/isCacheLike';
 declare module 'axios' {
 	interface AxiosRequestConfig {
 		forceUpdate?: boolean;
+		forceRevalidate?: boolean;
 		cache?: boolean | ICacheLike<any>;
-		stealWhileRevalidate?: boolean;
-		keepAlive?: number;
+		revalidate?: boolean | number;
 	}
 }
 
 const FIVE_MINUTES = 1000 * 60 * 5;
 const CAPACITY = 100;
 
+export type Cache = {
+	responsePromise: AxiosPromise | undefined,
+	revalidateDate: Date | undefined,
+};
+
 export type Options = {
 	enabledByDefault?: boolean,
 	cacheFlag?: string,
-	stealWhileRevalidateFlag?: string,
-	keepAliveFlag?: string,
-	defaultCache?: ICacheLike<AxiosPromise>,
-	swrDefaultCache?: ICacheLike<Date>,
+	revalidateFlag?: string,
+	defaultCache?: ICacheLike<Cache>,
 };
 
 export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: Options = {}): AxiosAdapter {
@@ -36,79 +39,77 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 	const {
 		enabledByDefault = true,
 		cacheFlag = 'cache',
-		stealWhileRevalidateFlag = 'stealWhileRevalidate',
-		keepAliveFlag = 'keepAlive',
+		revalidateFlag = 'revalidate',
 		defaultCache = new LRUCache<string, AxiosPromise>({ maxAge: FIVE_MINUTES, max: CAPACITY }),
-		swrDefaultCache = new LRUCache<string, Date>({ maxAge: FIVE_MINUTES, max: CAPACITY }),
 	} = options;
 
 	return config => {
 
-		const { url, method, params, paramsSerializer, forceUpdate } = config;
+		const { url, method, params, paramsSerializer, forceUpdate, forceRevalidate  } = config;
 		const useCache = ((config as any)[cacheFlag] !== void 0 && (config as any)[cacheFlag] !== null)
 			? (config as any)[cacheFlag]
 			: enabledByDefault;
-		const stealWhileRevalidate = ((config as any)[stealWhileRevalidateFlag] !== void 0 && (config as any)[stealWhileRevalidateFlag] !== null)
-			? (config as any)[stealWhileRevalidateFlag]
+		const revalidate = ((config as any)[revalidateFlag] !== void 0 && (config as any)[revalidateFlag] !== null)
+			? (config as any)[revalidateFlag]
 			: enabledByDefault;
-		const keepAlive = ((config as any)[keepAliveFlag] !== void 0 && (config as any)[keepAliveFlag] !== null)
-			? (config as any)[keepAliveFlag]
-			: 0;
+		const keepAlive = typeof(revalidate) === 'number' ? revalidate : 0;
 
 		if (method === 'get' && useCache) {
 
 			// if had provide a specified cache, then use it instead
-			const cache: ICacheLike<AxiosPromise> = isCacheLike(useCache) ? useCache : defaultCache;
-
-			// if had provide a specified cache for SWR expire date, then use it instead
-			const swrCache: ICacheLike<Date> = isCacheLike(stealWhileRevalidate) ? stealWhileRevalidate : swrDefaultCache;
+			const cache: ICacheLike<Cache> = isCacheLike(useCache) ? useCache : defaultCache;
 
 			// build the index according to the url and params
 			const index = buildSortedURL(url, params, paramsSerializer);
 
-			let responsePromise = cache.get(index);
+			const cached = cache.get(index);
 
-			if (!responsePromise || forceUpdate) {
+			if (!cached || !cached.responsePromise || forceUpdate) {
 
-				responsePromise = (async () => {
+				const cacheSet: Cache = {
+					responsePromise: undefined,
+					revalidateDate: undefined,
+				};
+
+				cacheSet.responsePromise = (async () => {
 
 					try {
 						const response = await adapter(config);
 
 						// set expiration date to swrCache for revalidating the request on next call
-						if (stealWhileRevalidate) {
-							if (keepAlive > 0) {
-								const expirationDate: Date = new Date();
-								expirationDate.setMilliseconds(expirationDate.getMilliseconds() + keepAlive);
-								swrCache.set(index, expirationDate);
-							} else {
-								swrCache.del(index);
-							}
+						if (revalidate && keepAlive > 0) {
+							const revalidationDate: Date = new Date();
+							revalidationDate.setMilliseconds(revalidationDate.getMilliseconds() + keepAlive);
+							cacheSet.revalidateDate =  revalidationDate;
 						}
 
 						return response;
 					} catch (reason) {
 						cache.del(index);
-						swrCache.del(index);
 						throw reason;
 					}
 
 				})();
 
 				// put the promise for the non-transformed response into cache as a placeholder
-				cache.set(index, responsePromise);
+				cache.set(index, cacheSet);
 
-				return responsePromise;
+				return cacheSet.responsePromise;
 			}
 
 			// check if SWR is enabled, then revalidate after delivering the cache
-			if (stealWhileRevalidate) {
+			if (revalidate) {
 
-				const expiredDate = swrCache.get(index);
+				const { revalidateDate } = cache.get(index) as Cache;
 
-				if (keepAlive === 0 || !expiredDate || expiredDate < new Date()) {
+				if (forceRevalidate || !revalidateDate || revalidateDate < new Date()) {
 
-					const revalidatedResponsePromise = (async () => {
+					const cacheSet: Cache = {
+						responsePromise: undefined,
+						revalidateDate: undefined,
+					};
+
+					cacheSet.responsePromise = (async () => {
 
 						/* istanbul ignore next */
 						if (process.env.LOGGER_LEVEL === 'info') {
@@ -121,24 +122,21 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 
 							// set expiration date to swrCache for revalidating the request on next call
 							if (keepAlive > 0) {
-								const newExpirationDate: Date = new Date();
-								newExpirationDate.setMilliseconds(newExpirationDate.getMilliseconds() + keepAlive);
-								swrCache.set(index, newExpirationDate);
-							} else {
-								swrCache.del(index);
+								const newRevalidationDate: Date = new Date();
+								newRevalidationDate.setMilliseconds(newRevalidationDate.getMilliseconds() + keepAlive);
+								cacheSet.revalidateDate =  revalidateDate;
 							}
 
 							return response;
 						} catch (reason) {
 							cache.del(index);
-							swrCache.del(index);
 							throw reason;
 						}
 
 					})();
 
 					// in the case of error occurred
-					revalidatedResponsePromise.catch(() => {
+					cacheSet.responsePromise.catch(() => {
 						/* istanbul ignore next */
 						if (process.env.LOGGER_LEVEL === 'info') {
 							// eslint-disable-next-line no-console
@@ -146,7 +144,7 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 						}
 					});
 
-					cache.set(index, revalidatedResponsePromise);
+					cache.set(index, cacheSet);
 				}
 			}
 
@@ -156,7 +154,7 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 				console.info(`[axios-extensions] request cached by cache adapter --> url: ${index}`);
 			}
 
-			return responsePromise;
+			return cached.responsePromise;
 		}
 
 		return adapter(config);
