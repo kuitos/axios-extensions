@@ -51,7 +51,7 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 			: enabledByDefault;
 		const revalidate = ((config as any)[revalidateFlag] !== void 0 && (config as any)[revalidateFlag] !== null)
 			? (config as any)[revalidateFlag]
-			: enabledByDefault;
+			: true;
 		const keepAlive = typeof(revalidate) === 'number' ? revalidate : 0;
 
 		if (method === 'get' && useCache) {
