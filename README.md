@@ -13,6 +13,7 @@ A non-invasive, simple, reliable collection of axios extension
 *Not working with axios v0.19.0 as its custom config bug, See https://github.com/axios/axios/pull/2207.*   
 
 * [cacheAdapterEnhancer](#cacheadapterenhancer) makes request cacheable
+* [swrCacheAdapterEnhancer](#cacheadapterenhancer) makes request cacheable but with stale-while-revalidate cache
 * [throttleAdapterEnhancer](#throttleadapterenhancer) makes GET requests throttled automatically
 * [retryAdapterEnhancer](#retryadapterenhancer) makes request retry with special times while it failed
 
@@ -158,6 +159,105 @@ http.get('/users', { cache: cacheB });
 
 // a actual request made and cached due to force update configured
 http.get('/users', { cache: cacheA, forceUpdate: true });
+```
+
+*Note: If you are using typescript, do not forget to enable `"esModuleInterop": true` and `"allowSyntheticDefaultImports": true` for better development experience.*
+
+### swrCacheAdapterEnhancer
+
+> Makes Axios cacheable but in an advanced way. The cached response staled while revalidated in the background.
+
+```typescript
+swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
+```
+
+Where `adapter` is an axios adapter which following the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), `options` is an optional that configuring caching: 
+
+| Param            | Type | Default value                            | Description                                                  |
+| ---------------- | ---------------------------------------- | ------------------------------------------------------------ | ---- |
+| enabledByDefault | boolean                              | true | Enables cache with stale-while-revalidate strategy for all requests without explicit definition in request config (e.g. `cache: true`) |
+| cacheFlag        | string                            | 'cache' | Configures key (flag) for explicit definition of cache usage in axios request |
+| revalidateFlag        | string                            | 'revalidate' | Configures key (flag) for explicit definition of revalidation strategy in axios request |
+| defaultCache     | CacheLike | <pre>new LRUCache({ maxAge: FIVE_MINUTES, max: 100 })</pre> | a CacheLike instance that will be used for storing requests by default, except you define a custom Cache with your request config |
+
+`swrCacheAdapterEnhancer` enhances the given adapter and returns a new cacheable adapter back, so you can compose it with any other enhancers, e.g.  `throttleAdapterEnhancer`.
+
+#### basic usage
+
+```javascript
+import axios from 'axios';
+import { swrCacheAdapterEnhancer } from 'axios-extensions';
+
+const http = axios.create({
+	baseURL: '/',
+	headers: { 'Cache-Control': 'no-cache' },
+	// cache and stale-while-revalidate will be enabled by default
+	adapter: swrCacheAdapterEnhancer(axios.defaults.adapter)
+});
+
+http.get('/users'); // make real http request
+http.get('/users'); // use the response from the cache of the previous request while revalidating it in the background, with a real HTTP request made for revalidation
+http.get('/users', { revalidate: 30 * 1000}); // use the response from the cache of the previous request while revalidating it in the background and don't revalidate it on the next call the until next 30 sec, with a real HTTP request made for revalidation
+http.get('/users', { cache: false }); // disable cache manually and the the real http request invoked
+```
+
+#### custom cache flag
+
+```javascript
+const http = axios.create({
+	baseURL: '/',
+	headers: { 'Cache-Control': 'no-cache' },
+	// disable the default cache and set the cache flag
+	adapter: swrCacheAdapterEnhancer(axios.defaults.adapter, { enabledByDefault: false, cacheFlag: 'useCache'})
+});
+
+http.get('/users'); // default cache was disabled and then the real http request invoked 
+http.get('/users', { useCache: true }); // make the request cacheable(real http request made due to first request invoke)
+http.get('/users', { useCache: true }); // use the response cache from previous request while revalidation it in the background
+```
+
+##### custom cache typing
+
+Note that if you are using custom cache flag and typescript, you may need to add the typing declaration like below:
+
+```ts
+import { ICacheLike } from 'axios-extensions';
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    // if your cacheFlag was setting to 'useCache'
+    useCache?: boolean | ICacheLike<any>;
+  }
+}
+```
+
+#### more advanced
+
+Besides configuring the request through the `swrCacheAdapterEnhancer`, we can enjoy more advanced features via configuring every individual request.
+
+```js
+import axios from 'axios';
+import { swrCacheAdapterEnhancer, Cache } from 'axios-extensions';
+
+const http = axios.create({
+	baseURL: '/',
+	headers: { 'Cache-Control': 'no-cache' },
+	// disable the default cache
+	adapter: swrCacheAdapterEnhancer(axios.defaults.adapter, { enabledByDefault: false })
+});
+
+http.get('/users', { cache: true }); // make the request cacheable(real http request made due to first request invoke)
+
+// define a cache manually
+const cacheA = new Cache();
+// or a cache-like instance
+const cacheB = { get() {/*...*/}, set() {/*...*/}, del() {/*...*/} };
+
+// two actual request will be made due to the different cache 
+http.get('/users', { cache: cacheA, revalidate: true });
+http.get('/users', { cache: cacheB, revalidate: 1000 * 60 * 5 }); // revalidation execute after 5 min
+
+http.get('/users', { cache: cacheA, forceUpdate: true }); // a actual request made and cached due to force update configured
+http.get('/users', { cache: cacheB, forceRevalidate: true }); // use the response cache from the previous request but revalidate it in the background without considering the revalidate expire time
 ```
 
 *Note: If you are using typescript, do not forget to enable `"esModuleInterop": true` and `"allowSyntheticDefaultImports": true` for better development experience.*
