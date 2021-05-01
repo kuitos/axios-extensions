@@ -124,7 +124,7 @@ export default function swrCacheAdapterEnhancer(adapter: AxiosAdapter, options: 
 							if (keepAlive > 0) {
 								const newRevalidationDate: Date = new Date();
 								newRevalidationDate.setMilliseconds(newRevalidationDate.getMilliseconds() + keepAlive);
-								cacheSet.revalidateDate =  revalidateDate;
+								cacheSet.revalidateDate =  newRevalidationDate;
 							}
 
 							return response;
