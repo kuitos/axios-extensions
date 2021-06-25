@@ -9,7 +9,7 @@ import axios, { AxiosPromise } from 'axios';
 import LRUCache from 'lru-cache';
 import { spy } from 'sinon';
 
-import cacheAdapterEnhancer from '../cacheAdapterEnhancer';
+import cacheAdapterEnhancer, { Cache } from '../cacheAdapterEnhancer';
 
 // mock the actual request
 const genMockAdapter = (cb: any) => (config: any) => {
@@ -120,16 +120,16 @@ test('request will refresh the cache with forceUpdate config', async t => {
 
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
-	const cache = new LRUCache<string, AxiosPromise>();
+	const cache = new LRUCache<string, Cache>();
 	const http = axios.create({
 		adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true, cacheFlag: 'cache', defaultCache: cache }),
 	});
 
 	const onSuccess = spy();
 	await http.get('/users').then(onSuccess);
-	const responed1 = await cache.get('/users') as any;
+	const responed1 = await (cache.get('/users') as any).responsePromise;
 	await http.get('/users', { forceUpdate: true } as any).then(onSuccess);
-	const responed2 = await cache.get('/users') as any;
+	const responed2 = await (cache.get('/users') as any).responsePromise;
 	t.is(adapterCb.callCount, 2);
 	t.is(onSuccess.callCount, 2);
 
