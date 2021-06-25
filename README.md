@@ -78,7 +78,9 @@ Where `adapter` is an axios adapter which following the [axios adapter standard]
 | Param            | Type | Default value                            | Description                                                  |
 | ---------------- | ---------------------------------------- | ------------------------------------------------------------ | ---- |
 | enabledByDefault | boolean                              | true | Enables cache for all requests without explicit definition in request config (e.g. `cache: true`) |
+| enabledSwrByDefault | boolean                           | true | Enables steal-while-revalidate strategy for this adaptor without explicit definition in request config (e.g. `revalidate: true`) |
 | cacheFlag        | string                            | 'cache' | Configures key (flag) for explicit definition of cache usage in axios request |
+| revalidateFlag        | string                            | 'revalidate' | Configures key (flag) for explicit definition of SWR usage in axios request |
 | defaultCache     | CacheLike | <pre>new LRUCache({ maxAge: FIVE_MINUTES, max: 100 })</pre> | a CacheLike instance that will be used for storing requests by default, except you define a custom Cache with your request config |
 
 `cacheAdapterEnhancer` enhances the given adapter and returns a new cacheable adapter back, so you can compose it with any other enhancers, e.g.  `throttleAdapterEnhancer`.
@@ -101,6 +103,24 @@ http.get('/users'); // use the response from the cache of previous request, with
 http.get('/users', { cache: false }); // disable cache manually and the the real http request invoked
 ```
 
+#### basic usage with SWR strategy
+
+```javascript
+import axios from 'axios';
+import { cacheAdapterEnhancer } from 'axios-extensions';
+
+const http = axios.create({
+	baseURL: '/',
+	headers: { 'Cache-Control': 'no-cache' },
+	// cache will be enabled by default
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter, { enabledSwrByDefault: true })
+});
+
+http.get('/users'); // make real http request
+http.get('/users'); // use the response from the cache of previous request, then update the cache with real http request (saved in cache for next request)
+http.get('/users', { cache: false }); // disable cache manually and the the real http request invoked (no matter SWR is enabled or not!)
+```
+
 #### custom cache flag
 
 ```javascript
@@ -114,6 +134,26 @@ const http = axios.create({
 http.get('/users'); // default cache was disabled and then the real http request invoked 
 http.get('/users', { useCache: true }); // make the request cacheable(real http request made due to first request invoke)
 http.get('/users', { useCache: true }); // use the response cache from previous request
+```
+
+#### custom cache and SWR flag with revalidation expires time (in ms)
+
+```javascript
+const http = axios.create({
+	baseURL: '/',
+	headers: { 'Cache-Control': 'no-cache' },
+	// disable the default cache and set the cache flag
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter, { enabledByDefault: false, cacheFlag: 'useCache', revalidateFlag: 'expire' })
+});
+
+const FIVE_MINS = 1000 * 5;
+
+http.get('/users'); // default cache was disabled and then the real http request invoked 
+http.get('/users', { useCache: true, expire: FIVE_MINS }); // make the request cacheable(real http request made due to first request invoke)
+// after 1 min
+http.get('/users', { useCache: true, expire: FIVE_MINS }); // use the response cache from previous request (no revalidation)
+// after 5 mins
+http.get('/users', { useCache: true, expire: FIVE_MINS }); // use the response cache from previous request but revalidate it for next request
 ```
 
 ##### custom cache typing
