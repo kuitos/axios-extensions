@@ -5,14 +5,18 @@
  */
 
 import test from 'ava';
-import axios, { AxiosPromise } from 'axios';
+import axios from 'axios';
 import LRUCache from 'lru-cache';
 import { spy } from 'sinon';
 
 import cacheAdapterEnhancer, { Cache } from '../cacheAdapterEnhancer';
 
+// delay function (used for time skipping in revalidation)
+const delay = (timeout: number) => new Promise((r) => setTimeout(r, timeout));
+
 // mock the actual request
-const genMockAdapter = (cb: any) => (config: any) => {
+const genMockAdapter = (cb: any) => async (config: any) => {
+	await delay(0);
 	cb();
 	if (config.error) {
 		return Promise.reject(config);
@@ -69,6 +73,46 @@ test('cache adapter shouldn\'t cache request with noCacheFlag', async t => {
 
 });
 
+test('cache adapter should revalidate cache request with revalidate flag', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const http = axios.create({
+		adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true, enabledSwrByDefault: true }),
+	});
+
+	const onSuccess = spy();
+
+	for (let i = 0; i < 5; i++) {
+		await http.get('/users').then(onSuccess);
+		await delay(5);
+
+		if (i === 0) {
+            // first time request call first (and cached)
+			t.is(adapterCb.getCall(0).calledBefore(onSuccess.getCall(0)), true);
+        } else {
+            // then deliver the cache and call the request (for revalidate)
+            t.is(adapterCb.getCall(i).calledAfter(onSuccess.getCall(i)), true);
+        }
+	}
+
+	t.is(onSuccess.callCount, 5);
+	t.is(adapterCb.callCount, 5);
+
+	await http.get('/users', { params: { name: 'kuitos' } }).then(onSuccess);
+	await delay(5);
+	t.is(onSuccess.callCount, 6);
+	t.is(adapterCb.callCount, 6);
+	t.is(adapterCb.getCall(5).calledBefore(onSuccess.getCall(5)), true);
+
+	await http.get('/users', { params: { name: 'kuitos' }, cache: true } as any).then(onSuccess);
+	await delay(5);
+	t.is(onSuccess.callCount, 7);
+	t.is(adapterCb.callCount, 7);
+	t.is(adapterCb.getCall(6).calledAfter(onSuccess.getCall(6)), true);
+
+});
+
 test('cache will be removed when request error', async t => {
 
 	const adapterCb = spy();
@@ -95,6 +139,83 @@ test('cache will be removed when request error', async t => {
 	t.is(onSuccess.callCount, 2);
 	t.is(adapterCb.callCount, 2);
 
+});
+
+test('cache will be removed when revalidation request error', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const http = axios.create({
+		adapter: cacheAdapterEnhancer(mockedAdapter, { revalidateFlag: 'reval', enabledByDefault: true, enabledSwrByDefault: true }),
+	});
+
+	const onSuccess = spy();
+	const onError = spy();
+	await Promise.all([
+	 http.get('/users', { error: true } as any).then(onSuccess, onError),
+	 http.get('/users').then(onSuccess, onError),
+	]);
+	await delay(5);
+
+	// as the previous uses invocation failed, the following users request will respond with the rejected promise
+	t.is(onSuccess.callCount, 0);
+	t.is(onError.callCount, 2);
+	t.is(adapterCb.callCount, 2);
+
+	await http.get('/users', { reval: 5 } as any).then(onSuccess, onError);
+	await delay(10);
+
+	await http.get('/users', { error: true, reval: 10 } as any).then(onSuccess, onError);
+	await delay(5);
+
+	t.is(onSuccess.callCount, 2); // cache served
+	t.is(onError.callCount, 2); // cache served (revalidate call after cache deliver so there is no error)
+	t.is(adapterCb.callCount, 4); // 2 more revalidation call
+
+	// but there is no cache for now (cleaned in revalidation error)
+	http.get('/users').then(onSuccess, onError),
+	await delay(10);
+	t.is(adapterCb.lastCall.calledBefore(onSuccess.lastCall), true);
+
+});
+
+test('cache adapter should cache request and revalidate it (based on expired date)', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const http = axios.create({
+		adapter: cacheAdapterEnhancer(mockedAdapter, {
+			enabledByDefault: true,
+			enabledSwrByDefault: true,
+		}),
+	});
+
+	const onSuccess = spy();
+
+	for (let i = 0; i < 5; i++) {
+        // call api
+		await http.get('/users', { revalidate: 50 }).then(onSuccess);
+
+        // delay some time (for revalidation occur)
+		await delay(5);
+	}
+
+	t.is(onSuccess.callCount, 5);
+	t.is(adapterCb.callCount, 1); // 1x for caching
+
+	await delay(50);
+	await http.get('/users', { revalidate: 50 }).then(onSuccess);
+	t.is(onSuccess.callCount, 6);
+	t.is(adapterCb.callCount, 1); // before revalidate (expired)
+	await delay(5);
+	t.is(adapterCb.callCount, 2); // after revalidate (expired)
+
+	await delay(50);
+	await http.get('/users').then(onSuccess);
+	t.is(onSuccess.callCount, 7);
+	t.is(adapterCb.callCount, 2); // before revalidate (expired)
+	await delay(5);
+	t.is(adapterCb.callCount, 3); // after revalidate (expired)
 });
 
 test('disable default cache switcher', async t => {
