@@ -5,9 +5,8 @@
  */
 
 import { AxiosAdapter, AxiosPromise, AxiosRequestConfig } from 'axios';
-import LRUCache from 'lru-cache';
-import { ICacheLike } from './cacheAdapterEnhancer';
 import buildSortedURL from './utils/buildSortedURL';
+import getDefaultLruCache, { ICacheLike } from './utils/getDefaultLruCache';
 
 export type RecordedCache = {
 	timestamp: number;
@@ -21,7 +20,7 @@ export type Options = {
 
 export default function throttleAdapterEnhancer(adapter: AxiosAdapter, options: Options = {}): AxiosAdapter {
 
-	const { threshold = 1000, cache = new LRUCache<string, RecordedCache>({ max: 10 }) } = options;
+	const { threshold = 1000, cache = getDefaultLruCache<RecordedCache>({ max: 10 }) } = options;
 
 	const recordCacheWithRequest = (index: string, config: AxiosRequestConfig) => {
 

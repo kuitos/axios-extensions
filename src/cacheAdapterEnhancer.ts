@@ -5,8 +5,8 @@
  */
 
 import { AxiosAdapter, AxiosPromise } from 'axios';
-import LRUCache from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
+import getDefaultLruCache, { ICacheLike } from './utils/getDefaultLruCache';
 import isCacheLike from './utils/isCacheLike';
 
 declare module 'axios' {
@@ -19,14 +19,6 @@ declare module 'axios' {
 const FIVE_MINUTES = 1000 * 60 * 5;
 const CAPACITY = 100;
 
-export interface ICacheLike<T> {
-	get(key: string): T | undefined;
-
-	set(key: string, value: T, maxAge?: number): boolean;
-
-	del(key: string): void;
-}
-
 export type Options = {
 	enabledByDefault?: boolean,
 	cacheFlag?: string,
@@ -38,7 +30,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 	const {
 		enabledByDefault = true,
 		cacheFlag = 'cache',
-		defaultCache = new LRUCache<string, AxiosPromise>({ maxAge: FIVE_MINUTES, max: CAPACITY }),
+		defaultCache = getDefaultLruCache<AxiosPromise>({ ttl: FIVE_MINUTES, max: CAPACITY }),
 	} = options;
 
 	return config => {
@@ -50,7 +42,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 
 		if (method === 'get' && useCache) {
 
-			// if had provide a specified cache, then use it instead
+			// if had provided a specified cache, then use it instead
 			const cache: ICacheLike<AxiosPromise> = isCacheLike(useCache) ? useCache : defaultCache;
 
 			// build the index according to the url and params

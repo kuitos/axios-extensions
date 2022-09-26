@@ -102,7 +102,7 @@ test('use a custom cache for throttle enhancer', async t => {
 
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
-	const cache = new LRUCache<string, RecordedCache>();
+	const cache = new LRUCache<string, RecordedCache>({ max: 100 });
 	const http = axios.create({
 		adapter: throttleAdapterEnhancer(mockedAdapter, { cache }),
 	});
@@ -115,7 +115,7 @@ test('use a custom cache for throttle enhancer', async t => {
 	t.is(onSuccess.callCount, 2);
 	t.is(adapterCb.callCount, 1);
 
-	cache.del('/users');
+	cache.delete('/users');
 	await Promise.all([
 		http.get('/users').then(onSuccess),
 		http.get('/users').then(onSuccess),
