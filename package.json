@@ -1,6 +1,6 @@
 {
   "name": "axios-extensions",
-  "version": "3.1.3",
+  "version": "3.1.4",
   "description": "make axios great again",
   "homepage": "https://github.com/kuitos/axios-extensions",
   "repository": "https://github.com/kuitos/axios-extensions.git",
@@ -67,6 +67,8 @@
     "typescript": "^4.1.3"
   },
   "ava": {
-    "files": ["lib/**/__tests__/**/*.js"]
+    "files": [
+      "lib/**/__tests__/**/*.js"
+    ]
   }
 }
