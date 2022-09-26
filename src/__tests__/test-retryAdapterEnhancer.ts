@@ -61,7 +61,7 @@ test('should throw an exception while request still failed after retry', async (
 
 	try {
 		await http.get('/test');
-	} catch (e) {
+	} catch (e: any) {
 		t.is(e.url, '/test');
 		t.is(spyFn.callCount, defaultTimes + 1);
 	}
@@ -81,7 +81,7 @@ test('should retry with special times for the custom config request', async (t) 
 	const customRetryTimes = 4;
 	try {
 		await http.get('/test', { retryTimes: customRetryTimes });
-	} catch (e) {
+	} catch (e: any) {
 		t.is(e.url, '/test');
 		t.is(spyFn.callCount, customRetryTimes + 1);
 	}

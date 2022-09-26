@@ -120,7 +120,7 @@ test('request will refresh the cache with forceUpdate config', async t => {
 
 	const adapterCb = spy();
 	const mockedAdapter = genMockAdapter(adapterCb);
-	const cache = new LRUCache<string, AxiosPromise>();
+	const cache = new LRUCache<string, AxiosPromise>({ max: 100 });
 	const http = axios.create({
 		adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true, cacheFlag: 'cache', defaultCache: cache }),
 	});
@@ -150,12 +150,12 @@ test('use a custom cache with request individual config', async t => {
 		adapter: cacheAdapterEnhancer(mockedAdapter),
 	});
 
-	const cache1 = new LRUCache();
-	const cache2 = new LRUCache();
+	const cache1 = new LRUCache({ max: 100 });
+	const cache2 = new LRUCache({ max: 100 });
 	await Promise.all([http.get('/users', { cache: cache1 } as any), http.get('/users', { cache: cache2 } as any)]);
 	t.is(adapterCb.callCount, 2);
 
-	cache2.reset();
+	cache2.clear();
 	await Promise.all([http.get('/users', { cache: cache1 } as any), http.get('/users', { cache: cache2 } as any)]);
 
 	t.is(adapterCb.callCount, 3);
