@@ -40,7 +40,7 @@
   ],
   "dependencies": {
     "@types/lru-cache": "^5.1.0",
-    "lru-cache": "^6.0.0",
+    "lru-cache": "^7.14.0",
     "tslib": "^2.1.0",
     "util": "^0.12.3"
   },
