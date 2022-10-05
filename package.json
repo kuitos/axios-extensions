@@ -31,7 +31,8 @@
     "report": "nyc report --reporter=html",
     "codecov": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
     "coverageCheck": "nyc --check-coverage --lines 80 --functions 80 --branches 80 npm run test:pure",
-    "lint": "tslint 'src/**/*.ts' & npm run coverageCheck"
+    "lint": "tslint 'src/**/*.ts' & npm run coverageCheck",
+    "ci": "npm run lint && npm run codecov"
   },
   "files": [
     "esm",
