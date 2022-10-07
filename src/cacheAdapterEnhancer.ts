@@ -5,9 +5,9 @@
  */
 
 import { AxiosAdapter, AxiosPromise } from 'axios';
+import LRUCache from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
-import getDefaultLruCache, { ICacheLike } from './utils/getDefaultLruCache';
-import isCacheLike from './utils/isCacheLike';
+import isCacheLike, { ICacheLike } from './utils/isCacheLike';
 
 declare module 'axios' {
 	interface AxiosRequestConfig {
@@ -30,7 +30,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 	const {
 		enabledByDefault = true,
 		cacheFlag = 'cache',
-		defaultCache = getDefaultLruCache<AxiosPromise>({ ttl: FIVE_MINUTES, max: CAPACITY }),
+		defaultCache = new LRUCache({ ttl: FIVE_MINUTES, max: CAPACITY }),
 	} = options;
 
 	return config => {
@@ -57,7 +57,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 					try {
 						return await adapter(config);
 					} catch (reason) {
-						cache.del(index);
+						'delete' in cache ? cache.delete(index) : cache.del(index);
 						throw reason;
 					}
 
