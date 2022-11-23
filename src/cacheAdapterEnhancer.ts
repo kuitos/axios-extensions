@@ -4,7 +4,7 @@
  * @since 2017-10-12
  */
 
-import { AxiosAdapter, AxiosPromise } from 'axios';
+import { AxiosAdapter, AxiosPromise, AxiosRequestConfig } from 'axios';
 import LRUCache from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
 import isCacheLike, { ICacheLike } from './utils/isCacheLike';
@@ -23,6 +23,7 @@ export type Options = {
 	enabledByDefault?: boolean,
 	cacheFlag?: string,
 	defaultCache?: ICacheLike<AxiosPromise>,
+	cacheKeyGenerator?: (config: AxiosRequestConfig, defaultCacheKey: string) => string,
 };
 
 export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Options = {}): AxiosAdapter {
@@ -46,7 +47,11 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 			const cache: ICacheLike<AxiosPromise> = isCacheLike(useCache) ? useCache : defaultCache;
 
 			// build the index according to the url and params
-			const index = buildSortedURL(url, params, paramsSerializer);
+			const defaultCacheKey = buildSortedURL(url, params, paramsSerializer);
+			// if had provided key generator, then use it to produce custom key
+			const customCacheKey = options.cacheKeyGenerator && options.cacheKeyGenerator(config, defaultCacheKey);
+
+			const index = customCacheKey || defaultCacheKey;
 
 			let responsePromise = cache.get(index);
 
