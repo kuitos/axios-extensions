@@ -4,12 +4,11 @@
  * @since 2017-10-12
  */
 
-// @ts-ignore
-import buildURL from 'axios/lib/helpers/buildURL';
+import axios from 'axios';
 
 export default function buildSortedURL(...args: any[]) {
-
-	const builtURL = buildURL(...args);
+	const [url, params, paramsSerializer] = args;
+	const builtURL = axios.getUri({ url, params, paramsSerializer });
 
 	const [urlPath, queryString] = builtURL.split('?');
 
