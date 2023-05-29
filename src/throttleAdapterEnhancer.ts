@@ -28,7 +28,7 @@ export default function throttleAdapterEnhancer(adapter: AxiosAdapter, options: 
 		const responsePromise = (async () => {
 
 			try {
-
+				// @ts-ignore
 				const response = await adapter(config);
 
 				cache.set(index, {
