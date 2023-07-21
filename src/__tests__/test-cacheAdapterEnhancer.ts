@@ -160,3 +160,24 @@ test('use a custom cache with request individual config', async t => {
 
 	t.is(adapterCb.callCount, 3);
 });
+
+test('custom cache key will produce two different requests', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const http = axios.create({
+		adapter: cacheAdapterEnhancer(mockedAdapter, {
+			cacheKeyGenerator(config, defaultCacheKey) {
+				return defaultCacheKey + (config.headers?.Authorization || '');
+			},
+		}),
+	});
+
+	const onSuccess = spy();
+	await http.get('/users', { headers: { Authorization: 'test1' } }).then(onSuccess);
+	await http.get('/users', { headers: { Authorization: 'test1' } }).then(onSuccess);
+	await http.get('/users', { headers: { Authorization: 'test2' } }).then(onSuccess);
+	t.is(adapterCb.callCount, 2);
+	t.is(onSuccess.callCount, 3);
+
+});
