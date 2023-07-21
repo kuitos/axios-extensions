@@ -37,7 +37,8 @@
   "files": [
     "esm",
     "lib",
-    "dist"
+    "dist",
+    "src"
   ],
   "dependencies": {
     "lru-cache": "^7.14.0",
