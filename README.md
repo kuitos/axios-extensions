@@ -43,25 +43,6 @@ const http = axios.create({
 	headers: { 'Cache-Control': 'no-cache' },
 	adapter: throttleAdapterEnhancer(cacheAdapterEnhancer(axios.defaults.adapter))
 });
-```
-
-### Enable Logging
-
-It is highly recommended to enable the request logging recorder in development environment(disabled by default).
-
-#### browser (webpack)
-```js
-new webpack.DefinePlugin({
-  'process.env.LOGGER_LEVEL': JSON.stringify('info')
-})
-```
-#### node
-```json
-// package.json
-"scripts": {
-	"start": "cross-env LOGGER_LEVEL=info node server.js"
-}
-```
 
 ## API
 

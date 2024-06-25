@@ -65,13 +65,6 @@ export default function throttleAdapterEnhancer(adapter: AxiosAdapter, options: 
 
 				const responsePromise = cachedRecord.value;
 				if (responsePromise) {
-
-					/* istanbul ignore next */
-					if (process.env.LOGGER_LEVEL === 'info') {
-						// eslint-disable-next-line no-console
-						console.info(`[axios-extensions] request cached by throttle adapter --> url: ${index}`);
-					}
-
 					return responsePromise;
 				}
 			}

@@ -69,12 +69,6 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 				return responsePromise;
 			}
 
-			/* istanbul ignore next */
-			if (process.env.LOGGER_LEVEL === 'info') {
-				// eslint-disable-next-line no-console
-				console.info(`[axios-extensions] request cached by cache adapter --> url: ${index}`);
-			}
-
 			return responsePromise;
 		}
 
