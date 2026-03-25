@@ -8,7 +8,7 @@ import axios from 'axios';
 import { spy } from 'sinon';
 import retryAdapterEnhancer from '../retryAdapterEnhancer';
 
-test('should retry the request with special times while request failed', async (t) => {
+test('should retry the request with special times while request failed', async t => {
 
 	const times = 3;
 	const spyFn = spy();
@@ -28,7 +28,7 @@ test('should retry the request with special times while request failed', async (
 	t.is(spyFn.callCount, times + 1);
 });
 
-test('should return the result immediately while the request succeed', async (t) => {
+test('should return the result immediately while the request succeed', async t => {
 	const spyFn = spy();
 	const mockedAdapter = (config: any) => {
 		spyFn();
@@ -47,7 +47,7 @@ test('should return the result immediately while the request succeed', async (t)
 	t.truthy(spyFn.calledTwice);
 });
 
-test('should throw an exception while request still failed after retry', async (t) => {
+test('should throw an exception while request still failed after retry', async t => {
 
 	const defaultTimes = 2;
 	const spyFn = spy();
@@ -67,7 +67,7 @@ test('should throw an exception while request still failed after retry', async (
 	}
 });
 
-test('should retry with special times for the custom config request', async (t) => {
+test('should retry with special times for the custom config request', async t => {
 
 	const spyFn = spy();
 	const mockedAdapter = (config: any) => {

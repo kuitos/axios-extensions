@@ -6,7 +6,7 @@
 
 import test from 'ava';
 import axios from 'axios';
-import LRUCache from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { spy } from 'sinon';
 
 import throttleAdapterEnhancer, { RecordedCache } from '../throttleAdapterEnhancer';
