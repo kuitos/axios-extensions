@@ -57,7 +57,11 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 					try {
 						return await adapter(config);
 					} catch (reason) {
-						cache.delete(index);
+						if ('delete' in cache) {
+							cache.delete(index);
+						} else {
+							(cache as any).del(index);
+						}
 						throw reason;
 					}
 

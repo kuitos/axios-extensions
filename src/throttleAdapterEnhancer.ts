@@ -37,7 +37,11 @@ export default function throttleAdapterEnhancer(adapter: AxiosAdapter, options: 
 
 				return response;
 			} catch (reason) {
-				cache.delete(index);
+				if ('delete' in cache) {
+					cache.delete(index);
+				} else {
+					(cache as any).del(index);
+				}
 				throw reason;
 			}
 

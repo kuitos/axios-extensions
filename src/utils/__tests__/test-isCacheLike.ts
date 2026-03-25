@@ -18,4 +18,19 @@ test('a object with specified method will be regard as cache', t => {
 		delete() {},
 	};
 	t.is(isCacheLike(cache), true);
+
+	// Test backward compat: object with del() should also be accepted
+	cache = {
+		get() {},
+		set() {},
+		del() {},
+	};
+	t.is(isCacheLike(cache), true);
+
+	// Test that object with neither del() nor delete() is rejected
+	cache = {
+		get() {},
+		set() {},
+	};
+	t.is(isCacheLike(cache), false);
 });
