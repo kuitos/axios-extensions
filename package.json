@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build": "rm -fr dist && npm run tsc && npm run dist",
-    "tsc": "npm run tsc:cjs & npm run tsc:esm",
+    "tsc": "npm run tsc:cjs && npm run tsc:esm",
     "tsc:cjs": "rm -fr lib && tsc",
     "tsc:esm": "rm -fr esm && tsc -p tsconfig.esm.json",
     "dist": "rm -fr dist && rollup -c rollup.config.mjs",

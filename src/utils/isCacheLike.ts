@@ -9,6 +9,15 @@ export type ICacheLike<T> = {
 } & ({ del(key: string): void } | { delete(key: string): void });
 
 export default function isCacheLike(cache: any): cache is ICacheLike<any> {
+	if (cache == null) {
+		return false;
+	}
+
+	const cacheType = typeof cache;
+	if (cacheType !== 'object' && cacheType !== 'function') {
+		return false;
+	}
+
 	return (
 		typeof cache.get === 'function'
 		&& typeof cache.set === 'function'

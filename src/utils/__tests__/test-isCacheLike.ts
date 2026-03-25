@@ -8,6 +8,9 @@ import test from 'ava';
 import isCacheLike from '../isCacheLike';
 
 test('a object with specified method will be regard as cache', t => {
+	t.is(isCacheLike(null), false);
+	t.is(isCacheLike(void 0), false);
+	t.is(isCacheLike(1), false);
 
 	let cache = {};
 	t.is(isCacheLike(cache), false);
