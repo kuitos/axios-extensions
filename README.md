@@ -5,20 +5,22 @@
 [![npm downloads](https://img.shields.io/npm/dt/axios-extensions.svg?style=flat-square)](https://www.npmjs.com/package/axios-extensions)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/kuitos/axios-extensions/ci.yml?branch=master&style=flat-square)](https://github.com/kuitos/axios-extensions/actions/workflows/ci.yml)
 
-A non-invasive, simple, reliable collection of axios extension
+A non-invasive, simple, reliable collection of axios extensions.
 
 ## Extension List
-*v3.x has a lot of api changes, if you are looking for v2.x doc, see [here](https://github.com/kuitos/axios-extensions/tree/v2.0.3)*
+*This README targets v4.x. If you are looking for older docs, see [v3.1.7](https://github.com/kuitos/axios-extensions/tree/v3.1.7) or [v2.0.3](https://github.com/kuitos/axios-extensions/tree/v2.0.3).* 
 
-*Not working with axios v0.19.0 as its custom config bug, See https://github.com/axios/axios/pull/2207.*   
+*v4.x requires Node.js >= 18 and axios >= 1.0.0.*
 
-* [cacheAdapterEnhancer](#cacheadapterenhancer) makes request cacheable
+*Not compatible with axios v0.19.0 due to a custom config bug. See https://github.com/axios/axios/pull/2207.*   
+
+* [cacheAdapterEnhancer](#cacheadapterenhancer) makes requests cacheable
 * [throttleAdapterEnhancer](#throttleadapterenhancer) makes GET requests throttled automatically
-* [retryAdapterEnhancer](#retryadapterenhancer) makes request retry with special times while it failed
+* [retryAdapterEnhancer](#retryadapterenhancer) retries failed requests a configurable number of times
 
 ## Installing
 ```bash
-npm i axios-extensions -S
+npm i axios-extensions
 ```
 or
 ```bash
@@ -37,7 +39,7 @@ or
 import axios from 'axios';
 import { cacheAdapterEnhancer, throttleAdapterEnhancer } from 'axios-extensions';
 
-// enhance the original axios adapter with throttle and cache enhancer 
+// Enhance the original axios adapter with throttle and cache enhancers.
 const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
@@ -47,7 +49,7 @@ const http = axios.create({
 
 ### Enable Logging
 
-It is highly recommended to enable the request logging recorder in development environment(disabled by default).
+It is highly recommended to enable request logging in development environments (disabled by default).
 
 #### browser (webpack)
 ```js
@@ -70,16 +72,16 @@ new webpack.DefinePlugin({
 > Makes axios cacheable
 
 ```typescript
-cacheAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
+cacheAdapterEnhancer(adapter: AxiosAdapter, options?: Options): AxiosAdapter
 ```
 
-Where `adapter` is an axios adapter which following the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), `options` is an optional that configuring caching: 
+Where `adapter` is an axios adapter that follows the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), and `options` is an optional object for configuring caching:
 
 | Param            | Type | Default value                            | Description                                                  |
 | ---------------- | ---------------------------------------- | ------------------------------------------------------------ | ---- |
 | enabledByDefault | boolean                              | true | Enables cache for all requests without explicit definition in request config (e.g. `cache: true`) |
 | cacheFlag        | string                            | 'cache' | Configures key (flag) for explicit definition of cache usage in axios request |
-| defaultCache     | CacheLike | <pre>new LRUCache({ maxAge: FIVE_MINUTES, max: 100 })</pre> | a CacheLike instance that will be used for storing requests by default, except you define a custom Cache with your request config |
+| defaultCache     | CacheLike | <pre>new LRUCache({ ttl: FIVE_MINUTES, max: 100 })</pre> | A CacheLike instance used to store requests by default, unless you define a custom cache in the request config |
 
 `cacheAdapterEnhancer` enhances the given adapter and returns a new cacheable adapter back, so you can compose it with any other enhancers, e.g.  `throttleAdapterEnhancer`.
 
@@ -98,7 +100,7 @@ const http = axios.create({
 
 http.get('/users'); // make real http request
 http.get('/users'); // use the response from the cache of previous request, without real http request made
-http.get('/users', { cache: false }); // disable cache manually and the the real http request invoked
+http.get('/users', { cache: false }); // disable cache manually and make a real HTTP request
 ```
 
 #### custom cache flag
@@ -111,20 +113,20 @@ const http = axios.create({
 	adapter: cacheAdapterEnhancer(axios.defaults.adapter, { enabledByDefault: false, cacheFlag: 'useCache'})
 });
 
-http.get('/users'); // default cache was disabled and then the real http request invoked 
-http.get('/users', { useCache: true }); // make the request cacheable(real http request made due to first request invoke)
+http.get('/users'); // default cache is disabled, so a real HTTP request is made
+http.get('/users', { useCache: true }); // make the request cacheable (real HTTP request is made on first call)
 http.get('/users', { useCache: true }); // use the response cache from previous request
 ```
 
 ##### custom cache typing
 
-Note that if you are using custom cache flag and typescript, you may need to add the typing declaration like below:
+Note that if you are using a custom cache flag and TypeScript, you may need to add type declarations like below:
 
 ```ts
 import { ICacheLike } from 'axios-extensions';
 declare module 'axios' {
   interface AxiosRequestConfig {
-    // if your cacheFlag was setting to 'useCache'
+    // if your cacheFlag is set to 'useCache'
     useCache?: boolean | ICacheLike<any>;
   }
 }
@@ -132,7 +134,7 @@ declare module 'axios' {
 
 #### more advanced
 
-Besides configuring the request through the `cacheAdapterEnhancer`, we can enjoy more advanced features via configuring every individual request.
+Besides configuring caching through `cacheAdapterEnhancer`, you can also configure advanced behavior per request.
 
 ```js
 import axios from 'axios';
@@ -145,18 +147,18 @@ const http = axios.create({
 	adapter: cacheAdapterEnhancer(axios.defaults.adapter, { enabledByDefault: false })
 });
 
-http.get('/users', { cache: true }); // make the request cacheable(real http request made due to first request invoke)
+http.get('/users', { cache: true }); // make the request cacheable (real HTTP request is made on first call)
 
 // define a cache manually
-const cacheA = new Cache();
+const cacheA = new Cache({ max: 100 });
 // or a cache-like instance
-const cacheB = { get() {/*...*/}, set() {/*...*/}, del() {/*...*/} };
+const cacheB = { get() {/*...*/}, set() {/*...*/}, delete() {/*...*/} };
 
-// two actual request will be made due to the different cache 
+// Two actual requests will be made because the caches are different.
 http.get('/users', { cache: cacheA });
 http.get('/users', { cache: cacheB });
 
-// a actual request made and cached due to force update configured
+// An actual request is made and cached due to forceUpdate.
 http.get('/users', { cache: cacheA, forceUpdate: true });
 ```
 
@@ -164,20 +166,20 @@ http.get('/users', { cache: cacheA, forceUpdate: true });
 
 ### throttleAdapterEnhancer
 
-> Throttle GET requests most once per threshold milliseconds
+> Throttle GET requests at most once per threshold milliseconds
 
 ```ts
-throttleAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
+throttleAdapterEnhancer(adapter: AxiosAdapter, options?: Options): AxiosAdapter
 ```
 
-Where `adapter` is an axios adapter which following the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), `options` is an optional object that configuring throttling: 
+Where `adapter` is an axios adapter that follows the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), and `options` is an optional object for configuring throttling:
 
 | Param     | Type |Default value               | Description                                                  |
 | --------- | ---- |--------------------------- | ------------------------------------------------------------ |
 | threshold | number |1000                        | The number of milliseconds to throttle request invocations to |
 | cache     | CacheLike |<pre>new LRUCache({ max: 10 })</pre> | CacheLike instance that will be used for storing throttled requests |
 
-Basically we recommend using the `throttleAdapterEnhancer` with `cacheAdapterEnhancer` together for the maximum caching benefits.
+We recommend using `throttleAdapterEnhancer` together with `cacheAdapterEnhancer` for maximum caching benefits.
 Note that POST and other methods besides GET are not affected. 
 
 ```js
@@ -199,23 +201,23 @@ const http = axios.create({
 });
 
 http.get('/users'); // make real http request
-http.get('/users'); // responsed from the cache
-http.get('/users'); // responsed from the cache
+http.get('/users'); // responded from cache
+http.get('/users'); // responded from cache
 
 setTimeout(() => {
-	http.get('/users'); // after 2s, the real request makes again
+	http.get('/users'); // after 2s, a real request is made again
 }, 2 * 1000);
 ```
 
 ### retryAdapterEnhancer
 
-> Retry the failed request with special times
+> Retry failed requests a configurable number of times
 
 ```ts
-retryAdapterEnhancer(adapter: AxiosAdapter, options: Options): AxiosAdapter
+retryAdapterEnhancer(adapter: AxiosAdapter, options?: Options): AxiosAdapter
 ```
 
-Where `adapter` is an axios adapter which following the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), `options` is an optional that configuring caching: 
+Where `adapter` is an axios adapter that follows the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), and `options` is an optional object for configuring retries:
 | Param            | Type | Default value                            | Description                                                  |
 | ---------------- | ---------------------------------------- | ------------------------------------------------------------ | ---- |
 | times | number                         | 2 | Set the retry times for failed request globally. |
@@ -232,10 +234,9 @@ const http = axios.create({
 	adapter: retryAdapterEnhancer(axios.defaults.adapter)
 });
 
-// this request will retry two times if it failed
+// this request will retry two times if it fails
 http.get('/users');
 
 // you could also set the retry times for a special request
 http.get('/special', { retryTimes: 3 });
 ```
-
