@@ -4,7 +4,7 @@
  * @since 2017-09-28
  */
 
-import Cache from 'lru-cache';
+import { LRUCache as Cache } from 'lru-cache';
 import cacheAdapterEnhancer from './cacheAdapterEnhancer';
 import retryAdapterEnhancer from './retryAdapterEnhancer';
 import throttleAdapterEnhancer from './throttleAdapterEnhancer';

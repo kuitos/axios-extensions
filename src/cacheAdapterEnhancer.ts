@@ -5,7 +5,7 @@
  */
 
 import { AxiosAdapter, AxiosPromise } from 'axios';
-import LRUCache from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
 import isCacheLike, { ICacheLike } from './utils/isCacheLike';
 
@@ -30,7 +30,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 	const {
 		enabledByDefault = true,
 		cacheFlag = 'cache',
-		defaultCache = new LRUCache({ ttl: FIVE_MINUTES, max: CAPACITY }),
+		defaultCache = new LRUCache<string, AxiosPromise>({ ttl: FIVE_MINUTES, max: CAPACITY }),
 	} = options;
 
 	return config => {
@@ -57,7 +57,11 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 					try {
 						return await adapter(config);
 					} catch (reason) {
-						'delete' in cache ? cache.delete(index) : cache.del(index);
+						if ('delete' in cache) {
+							cache.delete(index);
+						} else {
+							(cache as any).del(index);
+						}
 						throw reason;
 					}
 
@@ -71,7 +75,6 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 
 			/* istanbul ignore next */
 			if (process.env.LOGGER_LEVEL === 'info') {
-				// eslint-disable-next-line no-console
 				console.info(`[axios-extensions] request cached by cache adapter --> url: ${index}`);
 			}
 

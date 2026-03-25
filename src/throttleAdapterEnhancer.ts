@@ -5,7 +5,7 @@
  */
 
 import { AxiosAdapter, AxiosPromise, InternalAxiosRequestConfig } from 'axios';
-import LRUCache from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
 import { ICacheLike } from './utils/isCacheLike';
 
@@ -37,7 +37,11 @@ export default function throttleAdapterEnhancer(adapter: AxiosAdapter, options: 
 
 				return response;
 			} catch (reason) {
-				'delete' in cache ? cache.delete(index) : cache.del(index);
+				if ('delete' in cache) {
+					cache.delete(index);
+				} else {
+					(cache as any).del(index);
+				}
 				throw reason;
 			}
 
@@ -68,7 +72,6 @@ export default function throttleAdapterEnhancer(adapter: AxiosAdapter, options: 
 
 					/* istanbul ignore next */
 					if (process.env.LOGGER_LEVEL === 'info') {
-						// eslint-disable-next-line no-console
 						console.info(`[axios-extensions] request cached by throttle adapter --> url: ${index}`);
 					}
 

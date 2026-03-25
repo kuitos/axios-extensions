@@ -6,7 +6,7 @@
 
 import test from 'ava';
 import axios, { AxiosPromise } from 'axios';
-import LRUCache from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { spy } from 'sinon';
 
 import cacheAdapterEnhancer from '../cacheAdapterEnhancer';
