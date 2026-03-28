@@ -74,10 +74,10 @@ export default function throttleAdapterEnhancer(adapter: NonNullable<AxiosReques
 				const responsePromise = cachedRecord.value;
 				if (responsePromise) {
 
-				/* istanbul ignore next */
-				if (shouldLogInfo()) {
-					console.info(`[axios-extensions] request cached by throttle adapter --> url: ${index}`);
-				}
+					/* istanbul ignore next */
+					if (shouldLogInfo()) {
+						console.info(`[axios-extensions] request cached by throttle adapter --> url: ${index}`);
+					}
 
 					return responsePromise;
 				}
