@@ -1,181 +1,167 @@
-/**
- * @author Kuitos
- * @homepage https://github.com/kuitos/
- * @since 2017-10-16
- */
-
-import test from 'ava';
 import axios from 'axios';
-import { LRUCache } from 'lru-cache';
 import { spy } from 'sinon';
+import { describe, expect, it } from 'vitest';
 
+import Cache from '../Cache';
+import genMockAdapter from '../testUtils/mockAdapter';
 import throttleAdapterEnhancer, { RecordedCache } from '../throttleAdapterEnhancer';
 
-const genMockAdapter = (cb: any) => (config: any) => {
-	cb();
-	if (config.error) {
-		return Promise.reject(config);
-	}
-	return Promise.resolve(config);
-};
+describe('throttleAdapterEnhancer', () => {
+	it('throttle adapter should cache request in a threshold seconds', async () => {
 
-test('throttle adapter should cache request in a threshold seconds', async t => {
-
-	const threshold = 1000;
-	const adapterCb = spy();
-	const mockedAdapter = genMockAdapter(adapterCb);
-	const http = axios.create({
-		adapter: throttleAdapterEnhancer(mockedAdapter, { threshold }),
-	});
-
-	const onSuccess = spy();
-	const promises = [];
-
-	const start = Date.now();
-	for (let i = 0; i < 5; i++) {
-		promises.push(http.get('/users').then(onSuccess));
-	}
-
-	await Promise.all(promises);
-	const end = Date.now();
-	t.is(onSuccess.callCount, 5);
-	t.is(adapterCb.callCount, 1);
-	t.is(adapterCb.calledBefore(onSuccess), true);
-	t.is(end - start < threshold, true);
-
-	await new Promise(r => setTimeout(r, threshold + 50));
-	await Promise.all([
-		http.get('/users').then(onSuccess),
-		http.get('/users').then(onSuccess),
-	]);
-	t.is(onSuccess.callCount, 7);
-	t.is(adapterCb.callCount, 2);
-
-});
-
-test('throttle adapter shouldn`t do anything when a non-get request invoked', async t => {
-
-	const adapterCb = spy();
-	const mockedAdapter = genMockAdapter(adapterCb);
-	const http = axios.create({
-		adapter: throttleAdapterEnhancer(mockedAdapter),
-	});
-
-	const onSuccess = spy();
-	await Promise.all([
-		http.post('/users').then(onSuccess),
-		http.post('/users').then(onSuccess),
-	]);
-	t.is(onSuccess.callCount, 2);
-	t.is(adapterCb.callCount, 2);
-
-});
-
-test('cache will be removed when request error', async t => {
-
-	const adapterCb = spy();
-	const mockedAdapter = genMockAdapter(adapterCb);
-	const http = axios.create({
-		adapter: throttleAdapterEnhancer(mockedAdapter),
-	});
-
-	const onSuccess = spy();
-	const onError = spy();
-	await Promise.all([
-		http.get('/users', { error: true } as any).then(onSuccess, onError),
-		http.get('/users').then(onSuccess, onError),
-	]);
-	t.is(onSuccess.callCount, 0);
-	t.is(onError.callCount, 2);
-	t.is(adapterCb.callCount, 1);
-
-	await Promise.all([
-		http.get('/users').then(onSuccess, onError),
-		http.get('/users').then(onSuccess, onError),
-	]);
-	t.is(onSuccess.callCount, 2);
-	t.is(adapterCb.callCount, 2);
-
-});
-
-test('use a custom cache for throttle enhancer', async t => {
-
-	const adapterCb = spy();
-	const mockedAdapter = genMockAdapter(adapterCb);
-	const cache = new LRUCache<string, RecordedCache>({ max: 100 });
-	const http = axios.create({
-		adapter: throttleAdapterEnhancer(mockedAdapter, { cache }),
-	});
-
-	const onSuccess = spy();
-	await Promise.all([
-		http.get('/users').then(onSuccess),
-		http.get('/users').then(onSuccess),
-	]);
-	t.is(onSuccess.callCount, 2);
-	t.is(adapterCb.callCount, 1);
-
-	cache.delete('/users');
-	await Promise.all([
-		http.get('/users').then(onSuccess),
-		http.get('/users').then(onSuccess),
-	]);
-	t.is(onSuccess.callCount, 4);
-	t.is(adapterCb.callCount, 2);
-});
-
-test('throttle adapter should resolve adapter names via axios.getAdapter', async t => {
-
-	const adapterCb = spy();
-	const mockedAdapter = genMockAdapter(adapterCb);
-	const originalGetAdapter = axios.getAdapter;
-	const adapterName = 'http';
-
-	const getAdapterSpy = spy((value: Parameters<typeof originalGetAdapter>[0]) => {
-		t.is(value, adapterName);
-		return mockedAdapter;
-	});
-	axios.getAdapter = getAdapterSpy;
-	try {
+		const threshold = 1000;
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
 		const http = axios.create({
-			adapter: throttleAdapterEnhancer(adapterName),
+			adapter: throttleAdapterEnhancer(mockedAdapter, { threshold }),
 		});
 
-		await http.get('/users');
+		const onSuccess = spy();
+		const promises = [];
 
-		t.is(getAdapterSpy.callCount, 1);
-		t.is(adapterCb.callCount, 1);
-	} finally {
-		axios.getAdapter = originalGetAdapter;
-	}
-});
+		const start = Date.now();
+		for (let i = 0; i < 5; i++) {
+			promises.push(http.get('/users').then(onSuccess));
+		}
 
-test('throttle adapter should not throw when process is undefined', async t => {
+		await Promise.all(promises);
+		const end = Date.now();
+		expect(onSuccess.callCount).toBe(5);
+		expect(adapterCb.callCount).toBe(1);
+		expect(adapterCb.calledBefore(onSuccess)).toBe(true);
+		expect(end - start < threshold).toBe(true);
 
-	const adapterCb = spy();
-	const mockedAdapter = genMockAdapter(adapterCb);
-	const originalProcess = process;
-
-	Object.defineProperty(globalThis, 'process', {
-		value: undefined,
-		configurable: true,
-		writable: true,
+		await new Promise(r => setTimeout(r, threshold + 50));
+		await Promise.all([
+			http.get('/users').then(onSuccess),
+			http.get('/users').then(onSuccess),
+		]);
+		expect(onSuccess.callCount).toBe(7);
+		expect(adapterCb.callCount).toBe(2);
 	});
 
-	try {
+	it('throttle adapter shouldn`t do anything when a non-get request invoked', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
 		const http = axios.create({
-			adapter: throttleAdapterEnhancer(mockedAdapter, { threshold: 1000 }),
+			adapter: throttleAdapterEnhancer(mockedAdapter),
 		});
 
-		await http.get('/users');
-		await http.get('/users');
+		const onSuccess = spy();
+		await Promise.all([
+			http.post('/users').then(onSuccess),
+			http.post('/users').then(onSuccess),
+		]);
+		expect(onSuccess.callCount).toBe(2);
+		expect(adapterCb.callCount).toBe(2);
+	});
 
-		t.is(adapterCb.callCount, 1);
-	} finally {
+	it('cache will be removed when request error', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const http = axios.create({
+			adapter: throttleAdapterEnhancer(mockedAdapter),
+		});
+
+		const onSuccess = spy();
+		const onError = spy();
+		await Promise.all([
+			http.get('/users', { error: true } as any).then(onSuccess, onError),
+			http.get('/users').then(onSuccess, onError),
+		]);
+		expect(onSuccess.callCount).toBe(0);
+		expect(onError.callCount).toBe(2);
+		expect(adapterCb.callCount).toBe(1);
+
+		await Promise.all([
+			http.get('/users').then(onSuccess, onError),
+			http.get('/users').then(onSuccess, onError),
+		]);
+		expect(onSuccess.callCount).toBe(2);
+		expect(adapterCb.callCount).toBe(2);
+	});
+
+	it('use a custom cache for throttle enhancer', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const cache = new Cache<RecordedCache>({ max: 100 });
+		const http = axios.create({
+			adapter: throttleAdapterEnhancer(mockedAdapter, { cache }),
+		});
+
+		const onSuccess = spy();
+		await Promise.all([
+			http.get('/users').then(onSuccess),
+			http.get('/users').then(onSuccess),
+		]);
+		expect(onSuccess.callCount).toBe(2);
+		expect(adapterCb.callCount).toBe(1);
+
+		cache.delete('/users');
+		await Promise.all([
+			http.get('/users').then(onSuccess),
+			http.get('/users').then(onSuccess),
+		]);
+		expect(onSuccess.callCount).toBe(4);
+		expect(adapterCb.callCount).toBe(2);
+	});
+
+	it('throttle adapter should resolve adapter names via axios.getAdapter', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const originalGetAdapter = axios.getAdapter;
+		const adapterName = 'http';
+
+		const getAdapterSpy = spy((value: Parameters<typeof originalGetAdapter>[0]) => {
+			expect(value).toBe(adapterName);
+			return mockedAdapter;
+		});
+		axios.getAdapter = getAdapterSpy;
+		try {
+			const http = axios.create({
+				adapter: throttleAdapterEnhancer(adapterName),
+			});
+
+			await http.get('/users');
+
+			expect(getAdapterSpy.callCount).toBe(1);
+			expect(adapterCb.callCount).toBe(1);
+		} finally {
+			axios.getAdapter = originalGetAdapter;
+		}
+	});
+
+	it('throttle adapter should not throw when process is undefined', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const originalProcess = process;
+
 		Object.defineProperty(globalThis, 'process', {
-			value: originalProcess,
+			value: undefined,
 			configurable: true,
 			writable: true,
 		});
-	}
+
+		try {
+			const http = axios.create({
+				adapter: throttleAdapterEnhancer(mockedAdapter, { threshold: 1000 }),
+			});
+
+			await http.get('/users');
+			await http.get('/users');
+
+			expect(adapterCb.callCount).toBe(1);
+		} finally {
+			Object.defineProperty(globalThis, 'process', {
+				value: originalProcess,
+				configurable: true,
+				writable: true,
+			});
+		}
+	});
 });

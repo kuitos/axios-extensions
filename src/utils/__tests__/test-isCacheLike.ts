@@ -4,23 +4,23 @@
  * @since 2018/3/19 下午11:22
  */
 
-import test from 'ava';
+import { expect, it } from 'vitest';
 import isCacheLike from '../isCacheLike';
 
-test('a object with specified method will be regard as cache', t => {
-	t.is(isCacheLike(null), false);
-	t.is(isCacheLike(void 0), false);
-	t.is(isCacheLike(1), false);
+it('a object with specified method will be regard as cache', () => {
+	expect(isCacheLike(null)).toBe(false);
+	expect(isCacheLike(void 0)).toBe(false);
+	expect(isCacheLike(1)).toBe(false);
 
 	let cache = {};
-	t.is(isCacheLike(cache), false);
+	expect(isCacheLike(cache)).toBe(false);
 
 	cache = {
 		get() {},
 		set() {},
 		delete() {},
 	};
-	t.is(isCacheLike(cache), true);
+	expect(isCacheLike(cache)).toBe(true);
 
 	// Test backward compat: object with del() should also be accepted
 	cache = {
@@ -28,12 +28,12 @@ test('a object with specified method will be regard as cache', t => {
 		set() {},
 		del() {},
 	};
-	t.is(isCacheLike(cache), true);
+	expect(isCacheLike(cache)).toBe(true);
 
 	// Test that object with neither del() nor delete() is rejected
 	cache = {
 		get() {},
 		set() {},
 	};
-	t.is(isCacheLike(cache), false);
+	expect(isCacheLike(cache)).toBe(false);
 });

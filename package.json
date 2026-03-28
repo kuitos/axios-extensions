@@ -20,15 +20,13 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "rm -fr dist && npm run tsc && npm run dist",
-    "tsc": "npm run tsc:cjs && npm run tsc:esm",
-    "tsc:cjs": "rm -fr lib && tsc",
-    "tsc:esm": "rm -fr esm && tsc -p tsconfig.esm.json",
-    "dist": "rm -fr dist && rollup -c rollup.config.mjs",
+    "build": "rm -fr lib esm dist && npm run types && npm run build:js",
+    "build:js": "vite build --mode cjs && vite build --mode esm && vite build --mode umd && vite build --mode umd-min",
+    "types": "tsc -p tsconfig.types.json",
     "lint": "eslint src/",
-    "test": "npm run tsc:cjs && c8 ava -v",
-    "test:pure": "npm run tsc:cjs && ava -v",
-    "report": "c8 report --reporter=html",
+    "test": "vitest run --coverage",
+    "test:pure": "vitest run",
+    "report": "vitest run --coverage --reporter=verbose",
     "prepublishOnly": "npm run build",
     "release": "np --no-cleanup --yolo --no-publish",
     "ci": "npm run lint && npm run test",
@@ -40,33 +38,24 @@
     "dist",
     "src"
   ],
-  "dependencies": {
-    "lru-cache": "^11.0.0"
-  },
   "peerDependencies": {
     "axios": ">=1.0.0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^28.0.0",
-    "@rollup/plugin-node-resolve": "^16.0.0",
-    "@rollup/plugin-replace": "^6.0.0",
-    "@rollup/plugin-terser": "^1.0.0",
     "@types/node": "^20.0.0",
     "@types/sinon": "^21.0.0",
-    "ava": "^6.0.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "axios": "^1.7.0",
-    "c8": "^10.0.0",
     "eslint": "^9.0.0",
     "husky": "^9.0.0",
     "np": "^10.0.0",
-    "rollup": "^4.0.0",
     "sinon": "^19.0.0",
     "typescript": "^5.0.0",
-    "typescript-eslint": "^8.0.0"
+    "typescript-eslint": "^8.0.0",
+    "vite": "^6.3.0",
+    "vitest": "^3.2.4"
   },
-  "ava": {
-    "files": [
-      "lib/**/__tests__/**/*.js"
-    ]
+  "dependencies": {
+    "tiny-lru": "^11.4.7"
   }
 }

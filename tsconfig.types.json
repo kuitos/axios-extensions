@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "module": "es2020",
+    "outDir": "esm",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": false,
+    "moduleResolution": "node"
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/__tests__/**"
+  ]
+}
