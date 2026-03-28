@@ -25,6 +25,7 @@ export type Options = {
 	enabledByDefault?: boolean,
 	cacheFlag?: string,
 	defaultCache?: ICacheLike<AxiosPromise>,
+	keyGenerator?: (config: AxiosRequestConfig) => string,
 };
 
 export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestConfig['adapter']>, options: Options = {}): AxiosAdapter {
@@ -35,6 +36,7 @@ export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestCo
 		enabledByDefault = true,
 		cacheFlag = 'cache',
 		defaultCache = new LRUCache<string, AxiosPromise>({ ttl: FIVE_MINUTES, max: CAPACITY }),
+		keyGenerator,
 	} = options;
 
 	return config => {
@@ -49,8 +51,7 @@ export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestCo
 			// if had provided a specified cache, then use it instead
 			const cache: ICacheLike<AxiosPromise> = isCacheLike(useCache) ? useCache : defaultCache;
 
-			// build the index according to the url and params
-			const index = buildSortedURL(url, params, paramsSerializer);
+			const index = keyGenerator ? keyGenerator(config) : buildSortedURL(url, params, paramsSerializer);
 
 			let responsePromise = cache.get(index);
 
