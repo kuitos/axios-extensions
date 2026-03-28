@@ -5,7 +5,7 @@
  */
 
 import test from 'ava';
-import axios, { AxiosPromise } from 'axios';
+import axios, { AxiosPromise, AxiosRequestConfig } from 'axios';
 import { LRUCache } from 'lru-cache';
 import { spy } from 'sinon';
 
@@ -215,4 +215,21 @@ test('cache adapter should not throw when process is undefined', async t => {
 			writable: true,
 		});
 	}
+});
+
+test('cache adapter should support custom cache key generator', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const http = axios.create({
+		adapter: cacheAdapterEnhancer(mockedAdapter, {
+			enabledByDefault: true,
+			keyGenerator: (config: AxiosRequestConfig) => config.url || '',
+		}),
+	});
+
+	await http.get('/users', { params: { name: 'kuitos' } });
+	await http.get('/users', { params: { name: 'suhaotian' } });
+
+	t.is(adapterCb.callCount, 1);
 });
