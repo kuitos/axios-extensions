@@ -5,8 +5,9 @@
  */
 
 import { AxiosAdapter, AxiosPromise, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
-import { LRUCache } from 'lru-cache';
+import Cache from './Cache';
 import buildSortedURL from './utils/buildSortedURL';
+import deleteCacheEntry from './utils/deleteCacheEntry';
 import { ICacheLike } from './utils/isCacheLike';
 import resolveAdapter from './utils/resolveAdapter';
 import shouldLogInfo from './utils/shouldLogInfo';
@@ -25,9 +26,9 @@ export default function throttleAdapterEnhancer(adapter: NonNullable<AxiosReques
 
 	const resolvedAdapter = resolveAdapter(adapter);
 
-	const { threshold = 1000, cache = new LRUCache<string, RecordedCache>({ max: 10 }) } = options;
+	const { threshold = 1000, cache = new Cache<RecordedCache>({ max: 10 }) } = options;
 
-	const recordCacheWithRequest = (index: string, config: InternalAxiosRequestConfig) => {
+	function recordCacheWithRequest(index: string, config: InternalAxiosRequestConfig): AxiosPromise {
 
 		const responsePromise = (async () => {
 
@@ -41,11 +42,7 @@ export default function throttleAdapterEnhancer(adapter: NonNullable<AxiosReques
 
 				return response;
 			} catch (reason) {
-				if ('delete' in cache) {
-					cache.delete(index);
-				} else {
-					(cache as any).del(index);
-				}
+				deleteCacheEntry(cache, index);
 				throw reason;
 			}
 
@@ -57,7 +54,7 @@ export default function throttleAdapterEnhancer(adapter: NonNullable<AxiosReques
 		});
 
 		return responsePromise;
-	};
+	}
 
 	return config => {
 

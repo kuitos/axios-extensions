@@ -3,123 +3,114 @@
  * @since 2020-02-18
  */
 
-import test from 'ava';
+import { describe, expect, it } from 'vitest';
 import axios from 'axios';
 import { spy } from 'sinon';
+import type { SinonSpy } from 'sinon';
 import retryAdapterEnhancer from '../retryAdapterEnhancer';
 
-test('should retry the request with special times while request failed', async t => {
-
-	const times = 3;
-	const spyFn = spy();
-	const mockedAdapter = (config: any) => {
+function createEventuallySuccessAdapter(spyFn: SinonSpy, succeedAt: number) {
+	return function mockedAdapter(config: any) {
 		spyFn();
-		if (spyFn.callCount === times + 1) {
-			return Promise.resolve(config);
-		}
-		return Promise.reject(config);
-	};
-	const http = axios.create({
-		adapter: retryAdapterEnhancer(mockedAdapter, { times }),
-	});
-
-	await http.get('/test');
-
-	t.is(spyFn.callCount, times + 1);
-});
-
-test('should return the result immediately while the request succeed', async t => {
-	const spyFn = spy();
-	const mockedAdapter = (config: any) => {
-		spyFn();
-		if (spyFn.calledTwice) {
+		if (spyFn.callCount >= succeedAt) {
 			return Promise.resolve(config);
 		}
 
 		return Promise.reject(config);
 	};
-	const http = axios.create({
-		adapter: retryAdapterEnhancer(mockedAdapter),
-	});
+}
 
-	await http.get('/test');
-
-	t.truthy(spyFn.calledTwice);
-});
-
-test('should throw an exception while request still failed after retry', async t => {
-
-	const defaultTimes = 2;
-	const spyFn = spy();
-	const mockedAdapter = (config: any) => {
+function createAlwaysFailAdapter(spyFn: SinonSpy) {
+	return function mockedAdapter(config: any) {
 		spyFn();
 		return Promise.reject(config);
 	};
-	const http = axios.create({
-		adapter: retryAdapterEnhancer(mockedAdapter),
-	});
+}
 
-	try {
+describe('retryAdapterEnhancer', () => {
+	it('should retry the request with special times while request failed', async () => {
+
+		const times = 3;
+		const spyFn = spy();
+		const mockedAdapter = createEventuallySuccessAdapter(spyFn, times + 1);
+		const http = axios.create({
+			adapter: retryAdapterEnhancer(mockedAdapter, { times }),
+		});
+
 		await http.get('/test');
-	} catch (e: any) {
-		t.is(e.url, '/test');
-		t.is(spyFn.callCount, defaultTimes + 1);
-	}
-});
 
-test('should retry with special times for the custom config request', async t => {
-
-	const spyFn = spy();
-	const mockedAdapter = (config: any) => {
-		spyFn();
-		return Promise.reject(config);
-	};
-	const http = axios.create({
-		adapter: retryAdapterEnhancer(mockedAdapter, { times: 2 }),
+		expect(spyFn.callCount).toBe(times + 1);
 	});
 
-	const customRetryTimes = 4;
-	try {
-		await http.get('/test', { retryTimes: customRetryTimes });
-	} catch (e: any) {
-		t.is(e.url, '/test');
-		t.is(spyFn.callCount, customRetryTimes + 1);
-	}
-});
-
-test('should not throw ReferenceError when process is undefined', async t => {
-
-	const originalProcess = process;
-
-	Object.defineProperty(globalThis, 'process', {
-		value: undefined,
-		configurable: true,
-		writable: true,
-	});
-
-	const spyFn = spy();
-	const mockedAdapter = (config: any) => {
-		spyFn();
-		if (spyFn.calledTwice) {
-			return Promise.resolve(config);
-		}
-
-		return Promise.reject(config);
-	};
-
-	try {
+	it('should return the result immediately while the request succeed', async () => {
+		const spyFn = spy();
+		const mockedAdapter = createEventuallySuccessAdapter(spyFn, 2);
 		const http = axios.create({
 			adapter: retryAdapterEnhancer(mockedAdapter),
 		});
 
 		await http.get('/test');
 
-		t.truthy(spyFn.calledTwice);
-	} finally {
+		expect(spyFn.calledTwice).toBeTruthy();
+	});
+
+	it('should throw an exception while request still failed after retry', async () => {
+
+		const defaultTimes = 2;
+		const spyFn = spy();
+		const mockedAdapter = createAlwaysFailAdapter(spyFn);
+		const http = axios.create({
+			adapter: retryAdapterEnhancer(mockedAdapter),
+		});
+
+		await expect(http.get('/test')).rejects.toMatchObject({
+			url: '/test',
+		});
+		expect(spyFn.callCount).toBe(defaultTimes + 1);
+	});
+
+	it('should retry with special times for the custom config request', async () => {
+
+		const spyFn = spy();
+		const mockedAdapter = createAlwaysFailAdapter(spyFn);
+		const http = axios.create({
+			adapter: retryAdapterEnhancer(mockedAdapter, { times: 2 }),
+		});
+
+		const customRetryTimes = 4;
+		await expect(http.get('/test', { retryTimes: customRetryTimes })).rejects.toMatchObject({
+			url: '/test',
+		});
+		expect(spyFn.callCount).toBe(customRetryTimes + 1);
+	});
+
+	it('should not throw ReferenceError when process is undefined', async () => {
+
+		const originalProcess = process;
+
 		Object.defineProperty(globalThis, 'process', {
-			value: originalProcess,
+			value: undefined,
 			configurable: true,
 			writable: true,
 		});
-	}
+
+		const spyFn = spy();
+		const mockedAdapter = createEventuallySuccessAdapter(spyFn, 2);
+
+		try {
+			const http = axios.create({
+				adapter: retryAdapterEnhancer(mockedAdapter),
+			});
+
+			await http.get('/test');
+
+			expect(spyFn.calledTwice).toBeTruthy();
+		} finally {
+			Object.defineProperty(globalThis, 'process', {
+				value: originalProcess,
+				configurable: true,
+				writable: true,
+			});
+		}
+	});
 });

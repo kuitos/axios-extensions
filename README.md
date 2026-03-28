@@ -81,7 +81,7 @@ Where `adapter` is an axios adapter that follows the [axios adapter standard](ht
 | ---------------- | ---------------------------------------- | ------------------------------------------------------------ | ---- |
 | enabledByDefault | boolean                              | true | Enables cache for all requests without explicit definition in request config (e.g. `cache: true`) |
 | cacheFlag        | string                            | 'cache' | Configures key (flag) for explicit definition of cache usage in axios request |
-| defaultCache     | CacheLike | <pre>new LRUCache({ ttl: FIVE_MINUTES, max: 100 })</pre> | A CacheLike instance used to store requests by default, unless you define a custom cache in the request config |
+| defaultCache     | CacheLike | <pre>new Cache({ ttl: FIVE_MINUTES, max: 100 })</pre> | A CacheLike instance used to store requests by default, unless you define a custom cache in the request config |
 
 `cacheAdapterEnhancer` enhances the given adapter and returns a new cacheable adapter back, so you can compose it with any other enhancers, e.g.  `throttleAdapterEnhancer`.
 
@@ -177,7 +177,7 @@ Where `adapter` is an axios adapter that follows the [axios adapter standard](ht
 | Param     | Type |Default value               | Description                                                  |
 | --------- | ---- |--------------------------- | ------------------------------------------------------------ |
 | threshold | number |1000                        | The number of milliseconds to throttle request invocations to |
-| cache     | CacheLike |<pre>new LRUCache({ max: 10 })</pre> | CacheLike instance that will be used for storing throttled requests |
+| cache     | CacheLike |<pre>new Cache({ max: 10 })</pre> | CacheLike instance that will be used for storing throttled requests |
 
 We recommend using `throttleAdapterEnhancer` together with `cacheAdapterEnhancer` for maximum caching benefits.
 Note that POST and other methods besides GET are not affected. 

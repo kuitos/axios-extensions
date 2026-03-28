@@ -4,16 +4,17 @@
  * @since 2017-09-28
  */
 
-import { LRUCache as Cache } from 'lru-cache';
+import Cache from './Cache';
 import cacheAdapterEnhancer from './cacheAdapterEnhancer';
 import retryAdapterEnhancer from './retryAdapterEnhancer';
 import throttleAdapterEnhancer from './throttleAdapterEnhancer';
-import { ICacheLike } from './utils/isCacheLike';
+import type { ICacheLike } from './utils/isCacheLike';
 
 export {
 	Cache,
-	ICacheLike,
 	cacheAdapterEnhancer,
 	throttleAdapterEnhancer,
 	retryAdapterEnhancer,
 };
+
+export type { ICacheLike };
