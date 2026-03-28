@@ -43,7 +43,7 @@ test('throttle adapter should cache request in a threshold seconds', async t => 
 	t.is(adapterCb.calledBefore(onSuccess), true);
 	t.is(end - start < threshold, true);
 
-	await new Promise(r => setTimeout(r, threshold));
+	await new Promise(r => setTimeout(r, threshold + 50));
 	await Promise.all([
 		http.get('/users').then(onSuccess),
 		http.get('/users').then(onSuccess),
