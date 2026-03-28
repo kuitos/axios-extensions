@@ -160,3 +160,29 @@ test('use a custom cache with request individual config', async t => {
 
 	t.is(adapterCb.callCount, 3);
 });
+
+test('cache adapter should resolve adapter names via axios.getAdapter', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const originalGetAdapter = axios.getAdapter;
+	const adapterName = 'http';
+
+	const getAdapterSpy = spy((value: Parameters<typeof originalGetAdapter>[0]) => {
+		t.is(value, adapterName);
+		return mockedAdapter;
+	});
+	axios.getAdapter = getAdapterSpy;
+	try {
+		const http = axios.create({
+			adapter: cacheAdapterEnhancer(adapterName, { enabledByDefault: true }),
+		});
+
+		await http.get('/users');
+
+		t.is(getAdapterSpy.callCount, 1);
+		t.is(adapterCb.callCount, 1);
+	} finally {
+		axios.getAdapter = originalGetAdapter;
+	}
+});
