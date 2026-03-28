@@ -86,3 +86,40 @@ test('should retry with special times for the custom config request', async t =>
 		t.is(spyFn.callCount, customRetryTimes + 1);
 	}
 });
+
+test('should not throw ReferenceError when process is undefined', async t => {
+
+	const originalProcess = process;
+
+	Object.defineProperty(globalThis, 'process', {
+		value: undefined,
+		configurable: true,
+		writable: true,
+	});
+
+	const spyFn = spy();
+	const mockedAdapter = (config: any) => {
+		spyFn();
+		if (spyFn.calledTwice) {
+			return Promise.resolve(config);
+		}
+
+		return Promise.reject(config);
+	};
+
+	try {
+		const http = axios.create({
+			adapter: retryAdapterEnhancer(mockedAdapter),
+		});
+
+		await http.get('/test');
+
+		t.truthy(spyFn.calledTwice);
+	} finally {
+		Object.defineProperty(globalThis, 'process', {
+			value: originalProcess,
+			configurable: true,
+			writable: true,
+		});
+	}
+});

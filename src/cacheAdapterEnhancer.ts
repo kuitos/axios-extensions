@@ -9,6 +9,7 @@ import { LRUCache } from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
 import isCacheLike, { ICacheLike } from './utils/isCacheLike';
 import resolveAdapter from './utils/resolveAdapter';
+import shouldLogInfo from './utils/shouldLogInfo';
 
 declare module 'axios' {
 	interface AxiosRequestConfig {
@@ -77,7 +78,7 @@ export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestCo
 			}
 
 			/* istanbul ignore next */
-			if (process.env.LOGGER_LEVEL === 'info') {
+			if (shouldLogInfo()) {
 				console.info(`[axios-extensions] request cached by cache adapter --> url: ${index}`);
 			}
 

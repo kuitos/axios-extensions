@@ -9,6 +9,7 @@ import { LRUCache } from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
 import { ICacheLike } from './utils/isCacheLike';
 import resolveAdapter from './utils/resolveAdapter';
+import shouldLogInfo from './utils/shouldLogInfo';
 
 export type RecordedCache = {
 	timestamp: number;
@@ -73,10 +74,10 @@ export default function throttleAdapterEnhancer(adapter: NonNullable<AxiosReques
 				const responsePromise = cachedRecord.value;
 				if (responsePromise) {
 
-					/* istanbul ignore next */
-					if (process.env.LOGGER_LEVEL === 'info') {
-						console.info(`[axios-extensions] request cached by throttle adapter --> url: ${index}`);
-					}
+				/* istanbul ignore next */
+				if (shouldLogInfo()) {
+					console.info(`[axios-extensions] request cached by throttle adapter --> url: ${index}`);
+				}
 
 					return responsePromise;
 				}
