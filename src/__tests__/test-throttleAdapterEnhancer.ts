@@ -123,3 +123,29 @@ test('use a custom cache for throttle enhancer', async t => {
 	t.is(onSuccess.callCount, 4);
 	t.is(adapterCb.callCount, 2);
 });
+
+test('throttle adapter should resolve adapter names via axios.getAdapter', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const originalGetAdapter = axios.getAdapter;
+	const adapterName = 'http';
+
+	const getAdapterSpy = spy((value: Parameters<typeof originalGetAdapter>[0]) => {
+		t.is(value, adapterName);
+		return mockedAdapter;
+	});
+	axios.getAdapter = getAdapterSpy;
+	try {
+		const http = axios.create({
+			adapter: throttleAdapterEnhancer(adapterName),
+		});
+
+		await http.get('/users');
+
+		t.is(getAdapterSpy.callCount, 1);
+		t.is(adapterCb.callCount, 1);
+	} finally {
+		axios.getAdapter = originalGetAdapter;
+	}
+});

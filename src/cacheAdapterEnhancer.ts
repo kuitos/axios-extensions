@@ -4,10 +4,11 @@
  * @since 2017-10-12
  */
 
-import { AxiosAdapter, AxiosPromise } from 'axios';
+import { AxiosAdapter, AxiosPromise, AxiosRequestConfig } from 'axios';
 import { LRUCache } from 'lru-cache';
 import buildSortedURL from './utils/buildSortedURL';
 import isCacheLike, { ICacheLike } from './utils/isCacheLike';
+import resolveAdapter from './utils/resolveAdapter';
 
 declare module 'axios' {
 	interface AxiosRequestConfig {
@@ -25,7 +26,9 @@ export type Options = {
 	defaultCache?: ICacheLike<AxiosPromise>,
 };
 
-export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Options = {}): AxiosAdapter {
+export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestConfig['adapter']>, options: Options = {}): AxiosAdapter {
+
+	const resolvedAdapter = resolveAdapter(adapter);
 
 	const {
 		enabledByDefault = true,
@@ -55,7 +58,7 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 				responsePromise = (async () => {
 
 					try {
-						return await adapter(config);
+						return await resolvedAdapter(config);
 					} catch (reason) {
 						if ('delete' in cache) {
 							cache.delete(index);
@@ -81,6 +84,6 @@ export default function cacheAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 			return responsePromise;
 		}
 
-		return adapter(config);
+		return resolvedAdapter(config);
 	};
 }
