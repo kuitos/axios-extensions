@@ -43,7 +43,7 @@ test('throttle adapter should cache request in a threshold seconds', async t => 
 	t.is(adapterCb.calledBefore(onSuccess), true);
 	t.is(end - start < threshold, true);
 
-	await new Promise(r => setTimeout(r, threshold));
+	await new Promise(r => setTimeout(r, threshold + 50));
 	await Promise.all([
 		http.get('/users').then(onSuccess),
 		http.get('/users').then(onSuccess),
@@ -147,5 +147,35 @@ test('throttle adapter should resolve adapter names via axios.getAdapter', async
 		t.is(adapterCb.callCount, 1);
 	} finally {
 		axios.getAdapter = originalGetAdapter;
+	}
+});
+
+test('throttle adapter should not throw when process is undefined', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const originalProcess = process;
+
+	Object.defineProperty(globalThis, 'process', {
+		value: undefined,
+		configurable: true,
+		writable: true,
+	});
+
+	try {
+		const http = axios.create({
+			adapter: throttleAdapterEnhancer(mockedAdapter, { threshold: 1000 }),
+		});
+
+		await http.get('/users');
+		await http.get('/users');
+
+		t.is(adapterCb.callCount, 1);
+	} finally {
+		Object.defineProperty(globalThis, 'process', {
+			value: originalProcess,
+			configurable: true,
+			writable: true,
+		});
 	}
 });

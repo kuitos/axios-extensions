@@ -4,6 +4,7 @@
  */
 
 import { AxiosAdapter, AxiosResponse } from 'axios';
+import shouldLogInfo from './utils/shouldLogInfo';
 
 declare module 'axios' {
 	interface AxiosRequestConfig {
@@ -37,7 +38,7 @@ export default function retryAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 				count++;
 
 				/* istanbul ignore next */
-				if (process.env.LOGGER_LEVEL === 'info') {
+				if (shouldLogInfo()) {
 					console.info(`[axios-extensions] request start retrying --> url: ${config.url} , time: ${count}`);
 				}
 

@@ -186,3 +186,33 @@ test('cache adapter should resolve adapter names via axios.getAdapter', async t 
 		axios.getAdapter = originalGetAdapter;
 	}
 });
+
+test('cache adapter should not throw when process is undefined', async t => {
+
+	const adapterCb = spy();
+	const mockedAdapter = genMockAdapter(adapterCb);
+	const originalProcess = process;
+
+	Object.defineProperty(globalThis, 'process', {
+		value: undefined,
+		configurable: true,
+		writable: true,
+	});
+
+	try {
+		const http = axios.create({
+			adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true }),
+		});
+
+		await http.get('/users');
+		await http.get('/users');
+
+		t.is(adapterCb.callCount, 1);
+	} finally {
+		Object.defineProperty(globalThis, 'process', {
+			value: originalProcess,
+			configurable: true,
+			writable: true,
+		});
+	}
+});
