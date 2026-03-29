@@ -29,7 +29,7 @@ export type Options = {
 };
 
 function defaultCacheable(config: AxiosRequestConfig): boolean | ICacheLike<any> {
-	if (config.cache !== undefined && config.cache !== null) return config.cache;
+	if (config.cache != null) return config.cache;
 	return config.method === 'get';
 }
 
@@ -45,11 +45,11 @@ export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestCo
 
 	return config => {
 
-		const { url, params, paramsSerializer, forceUpdate } = config;
 		const result = cacheable(config);
 
 		if (result) {
 
+			const { url, params, paramsSerializer, forceUpdate } = config;
 			const cache: ICacheLike<AxiosPromise> = isCacheLike(result) ? result : defaultCache;
 			const index = keyGenerator ? keyGenerator(config) : buildSortedURL(url, params, paramsSerializer);
 
