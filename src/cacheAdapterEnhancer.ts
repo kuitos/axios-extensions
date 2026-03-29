@@ -44,7 +44,7 @@ export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestCo
 
 	return config => {
 
-		const { url, method, params, paramsSerializer, forceUpdate } = config;
+		const { url, params, paramsSerializer, forceUpdate } = config;
 		const requestConfig = config as AxiosRequestConfig & Record<string, unknown>;
 		const cacheValue = requestConfig[cacheFlag];
 		const useCache = (cacheValue !== void 0 && cacheValue !== null)
