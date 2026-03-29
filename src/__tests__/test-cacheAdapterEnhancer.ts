@@ -198,6 +198,41 @@ describe('cacheAdapterEnhancer', () => {
 		}
 	});
 
+	it('cache adapter should support caching POST requests with cacheable predicate', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const http = axios.create({
+			adapter: cacheAdapterEnhancer(mockedAdapter, {
+				enabledByDefault: true,
+				cacheable: (config: AxiosRequestConfig) => config.method === 'get' || config.method === 'post',
+				keyGenerator: (config: AxiosRequestConfig) => `${config.method}:${config.url}`,
+			}),
+		});
+
+		await http.post('/users', { name: 'kuitos' });
+		await http.post('/users', { name: 'kuitos' });
+
+		expect(adapterCb.callCount).toBe(1);
+
+		await http.get('/users');
+		expect(adapterCb.callCount).toBe(2);
+	});
+
+	it('cache adapter should not cache POST requests by default', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const http = axios.create({
+			adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true }),
+		});
+
+		await http.post('/users', { name: 'kuitos' });
+		await http.post('/users', { name: 'kuitos' });
+
+		expect(adapterCb.callCount).toBe(2);
+	});
+
 	it('cache adapter should support custom cache key generator', async () => {
 
 		const adapterCb = spy();

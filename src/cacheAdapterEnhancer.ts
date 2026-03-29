@@ -27,6 +27,7 @@ export type Options = {
 	cacheFlag?: string,
 	defaultCache?: ICacheLike<AxiosPromise>,
 	keyGenerator?: (config: AxiosRequestConfig) => string,
+	cacheable?: (config: AxiosRequestConfig) => boolean,
 };
 
 export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestConfig['adapter']>, options: Options = {}): AxiosAdapter {
@@ -38,6 +39,7 @@ export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestCo
 		cacheFlag = 'cache',
 		defaultCache = new Cache<AxiosPromise>({ ttl: FIVE_MINUTES, max: CAPACITY }),
 		keyGenerator,
+		cacheable = (config: AxiosRequestConfig) => config.method === 'get',
 	} = options;
 
 	return config => {
@@ -49,7 +51,7 @@ export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestCo
 			? cacheValue
 			: enabledByDefault;
 
-		if (method === 'get' && useCache) {
+		if (cacheable(config) && useCache) {
 
 			const cache: ICacheLike<AxiosPromise> = isCacheLike(useCache) ? useCache : defaultCache;
 			const index = keyGenerator ? keyGenerator(config) : buildSortedURL(url, params, paramsSerializer);
