@@ -7,12 +7,12 @@ import cacheAdapterEnhancer from '../cacheAdapterEnhancer';
 import genMockAdapter from '../testUtils/mockAdapter';
 
 describe('cacheAdapterEnhancer', () => {
-	it('cache adapter should cache request without noCacheFlag', async () => {
+	it('cache adapter should cache GET requests by default', async () => {
 
 		const adapterCb = spy();
 		const mockedAdapter = genMockAdapter(adapterCb);
 		const http = axios.create({
-			adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true }),
+			adapter: cacheAdapterEnhancer(mockedAdapter),
 		});
 
 		const onSuccess = spy();
@@ -37,12 +37,12 @@ describe('cacheAdapterEnhancer', () => {
 		expect(adapterCb.callCount).toBe(2);
 	});
 
-	it('cache adapter shouldn\'t cache request with noCacheFlag', async () => {
+	it('cache adapter should skip cache when cache:false is set per-request', async () => {
 
 		const adapterCb = spy();
 		const mockedAdapter = genMockAdapter(adapterCb);
 		const http = axios.create({
-			adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true, cacheFlag: 'cache' }),
+			adapter: cacheAdapterEnhancer(mockedAdapter),
 		});
 
 		const onSuccess = spy();
@@ -59,7 +59,7 @@ describe('cacheAdapterEnhancer', () => {
 		const adapterCb = spy();
 		const mockedAdapter = genMockAdapter(adapterCb);
 		const http = axios.create({
-			adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true }),
+			adapter: cacheAdapterEnhancer(mockedAdapter),
 		});
 
 		const onSuccess = spy();
@@ -80,31 +80,13 @@ describe('cacheAdapterEnhancer', () => {
 		expect(adapterCb.callCount).toBe(2);
 	});
 
-	it('disable default cache switcher', async () => {
-
-		const adapterCb = spy();
-		const mockedAdapter = genMockAdapter(adapterCb);
-		const http = axios.create({
-			adapter: cacheAdapterEnhancer(mockedAdapter),
-		});
-
-		const onSuccess = spy();
-		await Promise.all([
-			http.get('/users').then(onSuccess),
-			http.get('/users').then(onSuccess),
-			http.get('/users', { cache: false } as any).then(onSuccess),
-		]);
-		expect(onSuccess.callCount).toBe(3);
-		expect(adapterCb.callCount).toBe(2);
-	});
-
 	it('request will refresh the cache with forceUpdate config', async () => {
 
 		const adapterCb = spy();
 		const mockedAdapter = genMockAdapter(adapterCb);
 		const cache = new Cache<AxiosPromise>({ max: 100 });
 		const http = axios.create({
-			adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true, cacheFlag: 'cache', defaultCache: cache }),
+			adapter: cacheAdapterEnhancer(mockedAdapter, { defaultCache: cache }),
 		});
 
 		const onSuccess = spy();
@@ -123,7 +105,7 @@ describe('cacheAdapterEnhancer', () => {
 		expect(responed1).not.toBe(responed2);
 	});
 
-	it('use a custom cache with request individual config', async () => {
+	it('use a custom cache instance per-request via cacheable', async () => {
 
 		const adapterCb = spy();
 		const mockedAdapter = genMockAdapter(adapterCb);
@@ -156,7 +138,7 @@ describe('cacheAdapterEnhancer', () => {
 		axios.getAdapter = getAdapterSpy;
 		try {
 			const http = axios.create({
-				adapter: cacheAdapterEnhancer(adapterName, { enabledByDefault: true }),
+				adapter: cacheAdapterEnhancer(adapterName),
 			});
 
 			await http.get('/users');
@@ -182,7 +164,7 @@ describe('cacheAdapterEnhancer', () => {
 
 		try {
 			const http = axios.create({
-				adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true }),
+				adapter: cacheAdapterEnhancer(mockedAdapter),
 			});
 
 			await http.get('/users');
@@ -204,7 +186,6 @@ describe('cacheAdapterEnhancer', () => {
 		const mockedAdapter = genMockAdapter(adapterCb);
 		const http = axios.create({
 			adapter: cacheAdapterEnhancer(mockedAdapter, {
-				enabledByDefault: true,
 				cacheable: (config: AxiosRequestConfig) => config.method === 'get' || config.method === 'post',
 				keyGenerator: (config: AxiosRequestConfig) => `${config.method}:${config.url}`,
 			}),
@@ -224,7 +205,7 @@ describe('cacheAdapterEnhancer', () => {
 		const adapterCb = spy();
 		const mockedAdapter = genMockAdapter(adapterCb);
 		const http = axios.create({
-			adapter: cacheAdapterEnhancer(mockedAdapter, { enabledByDefault: true }),
+			adapter: cacheAdapterEnhancer(mockedAdapter),
 		});
 
 		await http.post('/users', { name: 'kuitos' });
@@ -239,7 +220,6 @@ describe('cacheAdapterEnhancer', () => {
 		const mockedAdapter = genMockAdapter(adapterCb);
 		const http = axios.create({
 			adapter: cacheAdapterEnhancer(mockedAdapter, {
-				enabledByDefault: true,
 				keyGenerator: (config: AxiosRequestConfig) => config.url || '',
 			}),
 		});
