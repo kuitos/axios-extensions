@@ -1,10 +1,8 @@
 # Migration Guide
 
-## Migrating to v5.x from v4.x
+## `cacheAdapterEnhancer` options consolidation (v4.1)
 
-### Breaking change: `cacheAdapterEnhancer` options
-
-v5 consolidates three cache options (`enabledByDefault`, `cacheFlag`, and the hardcoded `method === 'get'` check) into a single `cacheable` predicate.
+v4.1 consolidates three cache options (`enabledByDefault`, `cacheFlag`, and the hardcoded `method === 'get'` check) into a single `cacheable` predicate.
 
 **Options removed:**
 - `enabledByDefault`
@@ -20,20 +18,20 @@ The default behavior is **unchanged** — GET requests are cached automatically,
 #### Default usage (no changes needed)
 
 ```js
-// v4
+// before
 cacheAdapterEnhancer(adapter)
 
-// v5 — identical, default cacheable handles everything
+// after — identical, default cacheable handles everything
 cacheAdapterEnhancer(adapter)
 ```
 
 #### `enabledByDefault: false`
 
 ```js
-// v4
+// before
 cacheAdapterEnhancer(adapter, { enabledByDefault: false })
 
-// v5
+// after
 cacheAdapterEnhancer(adapter, {
   cacheable: (config) => config.cache ?? false,
 })
@@ -42,11 +40,11 @@ cacheAdapterEnhancer(adapter, {
 #### `enabledByDefault: false` with `cacheFlag: 'useCache'`
 
 ```js
-// v4
+// before
 cacheAdapterEnhancer(adapter, { enabledByDefault: false, cacheFlag: 'useCache' })
 // usage: http.get('/users', { useCache: true })
 
-// v5
+// after
 cacheAdapterEnhancer(adapter, {
   cacheable: (config) => config.useCache ?? false,
 })
@@ -56,11 +54,11 @@ cacheAdapterEnhancer(adapter, {
 #### Custom `cacheFlag` with default enabled
 
 ```js
-// v4
+// before
 cacheAdapterEnhancer(adapter, { cacheFlag: 'useCache' })
 // usage: http.get('/users', { useCache: false }) to opt out
 
-// v5
+// after
 cacheAdapterEnhancer(adapter, {
   cacheable: (config) => {
     if (config.useCache !== undefined) return config.useCache;
@@ -69,12 +67,12 @@ cacheAdapterEnhancer(adapter, {
 })
 ```
 
-#### Cache POST requests (new in v5)
+#### Cache POST requests (new)
 
 ```js
-// v4 — not possible
+// before — not possible
 
-// v5
+// after
 cacheAdapterEnhancer(adapter, {
   cacheable: (config) => config.method === 'get' || config.method === 'post',
   keyGenerator: (config) => `${config.method}:${config.url}`,

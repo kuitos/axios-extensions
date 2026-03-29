@@ -94,7 +94,7 @@ function defaultCacheable(config) {
 }
 ```
 
-> **Upgrading from v4.x?** See the [Migration Guide](./MIGRATION.md).
+> **Migrating from `enabledByDefault`/`cacheFlag`?** See the [Migration Guide](./MIGRATION.md).
 
 `cacheAdapterEnhancer` enhances the given adapter and returns a new cacheable adapter back, so you can compose it with any other enhancers, e.g.  `throttleAdapterEnhancer`.
 
