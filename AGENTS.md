@@ -1,64 +1,66 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-03-29 00:39:53 CST  
-**Commit:** 0ff55dc  
-**Branch:** feat/browser-friendly-cache
+**Generated:** 2026-03-30 23:42:10 CST  
+**Commit:** e2b0521  
+**Branch:** master
 
 ## OVERVIEW
-axios-extensions is a TypeScript library adding adapter enhancers for axios (cache, throttle, retry).
-It ships CJS (`lib`), ESM (`esm`), and browser UMD (`dist`) outputs from one source tree.
+axios-extensions is a TypeScript adapter-enhancer library for axios (cache/throttle/retry).
+Source-of-truth is `src/`; `lib`/`esm`/`dist` are generated outputs.
 
 ## STRUCTURE
 ```text
 ./
-├── src/                     # Source of truth: enhancers + utils + tests
-│   ├── __tests__/           # Enhancer-level tests
-│   └── utils/__tests__/     # Utility-level tests
-├── lib/                     # CJS build output (generated)
-├── esm/                     # ESM build output + .d.ts (generated)
-├── dist/                    # UMD outputs (generated)
-├── vite.config.ts           # Multi-mode build for cjs/esm/umd/umd-min
-├── vitest.config.ts         # Test + coverage configuration
-└── .github/workflows/       # CI + publish workflows
+├── src/                     # Runtime source, tests, utils
+│   ├── AGENTS.md            # Source-module guide
+│   └── utils/AGENTS.md      # Utility-layer local guide
+├── lib/                     # Generated CJS build
+├── esm/                     # Generated ESM build + d.ts
+├── dist/                    # Generated UMD build
+├── vite.config.ts           # Multi-mode library build
+├── vitest.config.ts         # Test and coverage config
+└── .github/workflows/       # CI + publish automation
 ```
 
 ## WHERE TO LOOK
 | Task | Location | Notes |
 |------|----------|-------|
-| Public exports | `src/index.ts` | Keep API surface stable for `main/module/types` fields |
-| Cache behavior | `src/cacheAdapterEnhancer.ts` | GET-only cache path, cache key from sorted URL |
-| Throttle behavior | `src/throttleAdapterEnhancer.ts` | Threshold window + in-flight dedupe |
-| Retry behavior | `src/retryAdapterEnhancer.ts` | Request-level override via `retryTimes` |
-| Cache abstraction | `src/Cache.ts`, `src/utils/isCacheLike.ts` | Supports `delete` and backward-compatible `del` |
-| URL normalization | `src/utils/buildSortedURL.ts` | Uses `axios.getUri` and sorted query pairs |
-| Test cases | `src/**/__tests__/*.ts` | Vitest + Sinon style |
-| Build/distribution | `package.json`, `vite.config.ts`, `tsconfig.types.json` | Preserve all three output families |
+| Public API surface | `src/index.ts` | Must stay aligned with package `main/module/types` |
+| Cache behavior | `src/cacheAdapterEnhancer.ts` | `cacheable` policy + key generation + `__fromCache` |
+| Throttle behavior | `src/throttleAdapterEnhancer.ts` | GET-only dedupe + per-request `threshold` |
+| Retry behavior | `src/retryAdapterEnhancer.ts` | global `times` + request `retryTimes` |
+| Adapter resolution | `src/utils/resolveAdapter.ts` | Handles axios v1 adapter forms |
+| Cache contract checks | `src/utils/isCacheLike.ts`, `src/utils/deleteCacheEntry.ts` | Supports `delete` and legacy `del` |
+| Build pipeline | `package.json`, `vite.config.ts`, `tsconfig.types.json` | cjs -> esm -> umd -> umd-min |
+| CI and release | `.github/workflows/*.yml`, `package.json#release` | release tag + GitHub publish split |
 
 ## CODE MAP
 | Symbol | Type | Location | Role |
 |--------|------|----------|------|
 | `cacheAdapterEnhancer` | function | `src/cacheAdapterEnhancer.ts` | Cache wrapper around resolved adapter |
-| `throttleAdapterEnhancer` | function | `src/throttleAdapterEnhancer.ts` | Time-window request throttle/dedupe |
-| `retryAdapterEnhancer` | function | `src/retryAdapterEnhancer.ts` | Retry failed requests |
-| `Cache` | class | `src/Cache.ts` | Default lightweight cache implementation |
-| `buildSortedURL` | function | `src/utils/buildSortedURL.ts` | Deterministic request key builder |
-| `isCacheLike` | function | `src/utils/isCacheLike.ts` | Runtime contract check for custom caches |
+| `throttleAdapterEnhancer` | function | `src/throttleAdapterEnhancer.ts` | Threshold-window request dedupe |
+| `retryAdapterEnhancer` | function | `src/retryAdapterEnhancer.ts` | Retry wrapper for failed requests |
+| `Cache` | class | `src/Cache.ts` | Default in-memory cache wrapper |
+| `resolveAdapter` | function | `src/utils/resolveAdapter.ts` | Normalize adapter input to function |
+| `buildSortedURL` | function | `src/utils/buildSortedURL.ts` | Stable key from sorted query pairs |
 
 ## CONVENTIONS (PROJECT-SPECIFIC)
-- Indentation uses tabs for code; JSON and selected config use spaces (`.editorconfig`).
-- ESLint allows `any` but enforces tab indentation and single quotes (`eslint.config.mjs`).
-- Tests run directly from source TypeScript via Vitest (`npm test`), not compiled test artifacts.
-- Build is mode-split Vite pipeline: `cjs -> esm -> umd -> umd-min`.
-- Package intentionally publishes `src` in addition to build outputs (`package.json#files`).
+- Tabs for code; spaces for JSON/config (`.editorconfig`).
+- ESLint allows `any`, enforces tabs + single quotes (`eslint.config.mjs`).
+- Tests run directly from source TS via Vitest (`vitest.config.ts`, `npm test`).
+- Package intentionally publishes `src` plus generated outputs (`package.json#files`).
+- UMD build keeps axios external and maps global `axios` (`vite.config.ts`).
 
 ## ANTI-PATTERNS (THIS PROJECT)
-- No explicit `DO NOT/NEVER` markers are defined in repository text.
-- Treat compatibility constraint as hard rule: axios `0.19.0` is unsupported (README note).
+- Do not edit `lib/`, `esm/`, or `dist/` directly; build regenerates them.
+- Do not target axios `<1.0.0` or Node `<18`.
+- Do not rely on axios `0.19.0` compatibility.
+- Do not bypass source entrypoints with imports from generated folders in source code.
 
 ## UNIQUE STYLES
-- Axios type augmentation is colocated in enhancer files via `declare module 'axios'`.
-- Cache APIs accept both modern `delete` and legacy `del` semantics.
-- Release flow is split: version/tag via `np --no-publish`; actual publish in GitHub Action.
+- Axios type augmentation is colocated inside enhancer files (`declare module 'axios'`).
+- Cache compatibility keeps both `delete` and `del` paths.
+- Release flow is two-step: version/tag (`np --no-publish`) then GitHub Action publish.
 
 ## COMMANDS
 ```bash
@@ -71,5 +73,5 @@ npm run release
 
 ## NOTES
 - Keep `main`, `module`, and `types` entrypoints aligned with generated outputs.
-- UMD builds must keep `axios` external and map global to `axios`.
-- Pre-push hook runs lint; local pushes fail if lint fails.
+- CI validates on Node 20.x and 22.x (`.github/workflows/ci.yml`).
+- Publish workflow triggers on `v4.*` tags (`publish-latest.yml`).
