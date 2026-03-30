@@ -77,11 +77,24 @@ cacheAdapterEnhancer(adapter: AxiosAdapter, options?: Options): AxiosAdapter
 
 Where `adapter` is an axios adapter that follows the [axios adapter standard](https://github.com/axios/axios/blob/master/lib/adapters/README.md), and `options` is an optional object for configuring caching:
 
-| Param            | Type | Default value                            | Description                                                  |
-| ---------------- | ---------------------------------------- | ------------------------------------------------------------ | ---- |
-| enabledByDefault | boolean                              | true | Enables cache for all requests without explicit definition in request config (e.g. `cache: true`) |
-| cacheFlag        | string                            | 'cache' | Configures key (flag) for explicit definition of cache usage in axios request |
-| defaultCache     | CacheLike | <pre>new Cache({ ttl: FIVE_MINUTES, max: 100 })</pre> | A CacheLike instance used to store requests by default, unless you define a custom cache in the request config |
+| Param | Type | Default value | Description |
+| --- | --- | --- | --- |
+| cacheable | `(config: AxiosRequestConfig) => boolean \| ICacheLike` | See below | A predicate that decides whether a request should be cached. Return `true` to cache with `defaultCache`, return a `ICacheLike` instance to cache with that specific store, or return `false` to skip caching. |
+| keyGenerator | `(config: AxiosRequestConfig) => string` | `buildSortedURL(url, params)` | Generates the cache key for a request. |
+| defaultCache | `ICacheLike` | `new Cache({ ttl: 5min, max: 100 })` | The default cache store used when `cacheable` returns `true`. |
+
+The default `cacheable` implementation:
+
+```ts
+function defaultCacheable(config) {
+  // Per-request override via config.cache (boolean or ICacheLike instance)
+  if (config.cache !== undefined && config.cache !== null) return config.cache;
+  // Cache GET requests by default
+  return config.method === 'get';
+}
+```
+
+> **Migrating from `enabledByDefault`/`cacheFlag`?** See the [Migration Guide](./MIGRATION.md).
 
 `cacheAdapterEnhancer` enhances the given adapter and returns a new cacheable adapter back, so you can compose it with any other enhancers, e.g.  `throttleAdapterEnhancer`.
 
@@ -94,7 +107,7 @@ import { cacheAdapterEnhancer } from 'axios-extensions';
 const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
-	// cache will be enabled by default
+	// cache will be enabled by default for GET requests
 	adapter: cacheAdapterEnhancer(axios.defaults.adapter)
 });
 
@@ -103,33 +116,40 @@ http.get('/users'); // use the response from the cache of previous request, with
 http.get('/users', { cache: false }); // disable cache manually and make a real HTTP request
 ```
 
-#### custom cache flag
+#### cache POST requests
+
+By providing a custom `cacheable` predicate, you can cache any HTTP method:
 
 ```javascript
 const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
-	// disable the default cache and set the cache flag
-	adapter: cacheAdapterEnhancer(axios.defaults.adapter, { enabledByDefault: false, cacheFlag: 'useCache'})
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter, {
+		cacheable: (config) => config.method === 'get' || config.method === 'post',
+		// include method in the cache key to avoid collisions between GET and POST
+		keyGenerator: (config) => `${config.method}:${config.url}`,
+	})
 });
 
-http.get('/users'); // default cache is disabled, so a real HTTP request is made
-http.get('/users', { useCache: true }); // make the request cacheable (real HTTP request is made on first call)
-http.get('/users', { useCache: true }); // use the response cache from previous request
+http.post('/query', { filter: 'active' }); // make real http request
+http.post('/query', { filter: 'active' }); // cache hit
 ```
 
-##### custom cache typing
+#### opt-in caching (disabled by default)
 
-Note that if you are using a custom cache flag and TypeScript, you may need to add type declarations like below:
+```javascript
+const http = axios.create({
+	baseURL: '/',
+	headers: { 'Cache-Control': 'no-cache' },
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter, {
+		// only cache when explicitly opted in via config.cache
+		cacheable: (config) => config.cache ?? false,
+	})
+});
 
-```ts
-import { ICacheLike } from 'axios-extensions';
-declare module 'axios' {
-  interface AxiosRequestConfig {
-    // if your cacheFlag is set to 'useCache'
-    useCache?: boolean | ICacheLike<any>;
-  }
-}
+http.get('/users'); // no cache, real HTTP request
+http.get('/users', { cache: true }); // cached (real HTTP request on first call)
+http.get('/users', { cache: true }); // cache hit
 ```
 
 #### more advanced
@@ -143,11 +163,8 @@ import { cacheAdapterEnhancer, Cache } from 'axios-extensions';
 const http = axios.create({
 	baseURL: '/',
 	headers: { 'Cache-Control': 'no-cache' },
-	// disable the default cache
-	adapter: cacheAdapterEnhancer(axios.defaults.adapter, { enabledByDefault: false })
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter)
 });
-
-http.get('/users', { cache: true }); // make the request cacheable (real HTTP request is made on first call)
 
 // define a cache manually
 const cacheA = new Cache({ max: 100 });
