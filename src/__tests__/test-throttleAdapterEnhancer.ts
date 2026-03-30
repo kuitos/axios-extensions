@@ -83,6 +83,42 @@ describe('throttleAdapterEnhancer', () => {
 		expect(adapterCb.callCount).toBe(2);
 	});
 
+	it('should use per-request threshold to override global threshold', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const http = axios.create({
+			adapter: throttleAdapterEnhancer(mockedAdapter, { threshold: 1000 }),
+		});
+
+		await http.get('/users', { threshold: 100 });
+		await http.get('/users', { threshold: 100 });
+		expect(adapterCb.callCount).toBe(1);
+
+		await new Promise(r => setTimeout(r, 150));
+		await http.get('/users', { threshold: 100 });
+		expect(adapterCb.callCount).toBe(2);
+	});
+
+	it('should fallback to global threshold when per-request threshold is not set', async () => {
+
+		const globalThreshold = 200;
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const http = axios.create({
+			adapter: throttleAdapterEnhancer(mockedAdapter, { threshold: globalThreshold }),
+		});
+
+		await http.get('/users');
+		await new Promise(r => setTimeout(r, 100));
+		await http.get('/users');
+		expect(adapterCb.callCount).toBe(1);
+
+		await new Promise(r => setTimeout(r, globalThreshold));
+		await http.get('/users');
+		expect(adapterCb.callCount).toBe(2);
+	});
+
 	it('use a custom cache for throttle enhancer', async () => {
 
 		const adapterCb = spy();
