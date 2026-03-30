@@ -12,6 +12,12 @@ import { ICacheLike } from './utils/isCacheLike';
 import resolveAdapter from './utils/resolveAdapter';
 import shouldLogInfo from './utils/shouldLogInfo';
 
+declare module 'axios' {
+	interface AxiosRequestConfig {
+		threshold?: number;
+	}
+}
+
 export type RecordedCache = {
 	timestamp: number;
 	value?: AxiosPromise;
@@ -58,15 +64,16 @@ export default function throttleAdapterEnhancer(adapter: NonNullable<AxiosReques
 
 	return config => {
 
-		const { url, method, params, paramsSerializer } = config;
+		const { url, method, params, paramsSerializer, threshold: thresholdPerRequest } = config;
 		const index = buildSortedURL(url, params, paramsSerializer);
+		const effectiveThreshold = thresholdPerRequest ?? threshold;
 
 		const now = Date.now();
 		const cachedRecord = cache.get(index) || { timestamp: now };
 
 		if (method === 'get') {
 
-			if (now - cachedRecord.timestamp <= threshold) {
+			if (now - cachedRecord.timestamp <= effectiveThreshold) {
 
 				const responsePromise = cachedRecord.value;
 				if (responsePromise) {
