@@ -2,6 +2,7 @@
 
 **Scope:** `src/**`
 **Parent:** `../AGENTS.md`
+**Child Guide:** `./utils/AGENTS.md`
 
 ## OVERVIEW
 `src` contains all runtime behavior; generated directories must not be used as editing targets.
@@ -37,11 +38,13 @@ src/
 - Preserve `ICacheLike` compatibility path for both `.delete()` and `.del()`.
 - Keep helper utilities side-effect free; enhancer files own request-flow side effects.
 - Keep tests colocated under `__tests__` with `test-*.ts` naming.
+- Keep adapter handling through `utils/resolveAdapter.ts` for axios v1 compatibility.
 
 ## TESTING RULES (LOCAL)
 - Use Vitest assertions and Sinon spies (current suite style).
 - For enhancer behavior changes, update both success path and error path assertions.
 - For cache/throttle paths, assert adapter call counts in addition to response assertions.
+- Preserve browser-safety expectations (`process` can be undefined) in enhancer tests.
 
 ## ANTI-PATTERNS
 - Do not import from `lib/`, `esm/`, or `dist/` inside `src`.
