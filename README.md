@@ -1,3 +1,5 @@
+<div align="center">
+
 # axios-extensions
 
 [![npm version](https://img.shields.io/npm/v/axios-extensions.svg?style=flat-square)](https://www.npmjs.com/package/axios-extensions)
@@ -5,17 +7,59 @@
 [![coverage](https://img.shields.io/codecov/c/github/kuitos/axios-extensions.svg?style=flat-square)](https://codecov.io/gh/kuitos/axios-extensions)
 [![npm downloads](https://img.shields.io/npm/dt/axios-extensions.svg?style=flat-square)](https://www.npmjs.com/package/axios-extensions)
 
-Lightweight adapter enhancers for Axios:
+**Composable Axios adapter enhancers for cache, throttle, and retry.**
 
-- **`cacheAdapterEnhancer`**: request-level caching with custom cache strategy support
-- **`throttleAdapterEnhancer`**: dedupe/throttle GET calls inside a threshold window
-- **`retryAdapterEnhancer`**: retry failed requests with global or per-request overrides
+[Quick Start](#quick-start) • [API](#api) • [Migration](./MIGRATION.md) • [npm](https://www.npmjs.com/package/axios-extensions)
+
+</div>
+
+axios-extensions gives you production-friendly request behavior without replacing Axios itself.
 
 > This README targets **v4.x**. Looking for older docs? See [v3.1.7](https://github.com/kuitos/axios-extensions/tree/v3.1.7).
 >
 > Migrating from v3? Read **[MIGRATION.md](./MIGRATION.md)**.
 
-## Requirements
+## Table of Contents
+
+- [Why axios-extensions](#why-axios-extensions)
+- [Version & Compatibility](#version--compatibility)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [API](#api)
+  - [`cacheAdapterEnhancer`](#cacheadapterenhancer)
+  - [`throttleAdapterEnhancer`](#throttleadapterenhancer)
+  - [`retryAdapterEnhancer`](#retryadapterenhancer)
+- [TypeScript Notes](#typescript-notes)
+- [Logging](#logging)
+- [Development](#development)
+- [License](#license)
+
+## Highlights
+
+- ⚡ **Composable by design**: stack cache, throttle, and retry in one adapter pipeline.
+- 🧠 **Sensible defaults**: GET caching, GET-only throttling, and retry controls out of the box.
+- 🧩 **TypeScript-ready**: request config is module-augmented for feature flags and overrides.
+- 🪶 **Lightweight**: focused utilities with no framework lock-in.
+
+## Why axios-extensions
+
+| Enhancer | What it does | Typical use case |
+| --- | --- | --- |
+| `cacheAdapterEnhancer` | Request-level response caching | Avoid duplicate reads for the same resource |
+| `throttleAdapterEnhancer` | Dedupe/throttle GET requests inside a time window | Prevent burst requests during rapid UI interactions |
+| `retryAdapterEnhancer` | Retry failed requests with global/per-request overrides | Improve resilience on flaky networks |
+
+These enhancers are designed to be **composed together** on top of Axios adapters.
+
+### Pick the right enhancer
+
+| If you want to... | Use |
+| --- | --- |
+| Avoid duplicate reads and reuse response results | `cacheAdapterEnhancer` |
+| Collapse repeated GET requests in rapid bursts | `throttleAdapterEnhancer` |
+| Survive transient network/backend failures | `retryAdapterEnhancer` |
+
+## Version & Compatibility
 
 | Package | Supported version |
 | --- | --- |
@@ -30,8 +74,6 @@ Lightweight adapter enhancers for Axios:
 npm i axios-extensions
 ```
 
-or
-
 ```bash
 yarn add axios-extensions
 ```
@@ -44,6 +86,8 @@ Browser UMD build:
 ```
 
 ## Quick Start
+
+Compose all three enhancers in one adapter:
 
 ```ts
 import axios from 'axios';
@@ -67,12 +111,40 @@ export const http = axios.create({
 });
 ```
 
+Per-request overrides:
+
+```ts
+await http.get('/users', {
+	forceUpdate: true,
+	threshold: 3000,
+	retryTimes: 3,
+});
+```
+
+Common composition presets:
+
+```ts
+// 1) Cache only
+const cacheOnly = cacheAdapterEnhancer(axios.defaults.adapter!);
+
+// 2) Cache + throttle (great for list/search pages)
+const cacheAndThrottle = throttleAdapterEnhancer(
+	cacheAdapterEnhancer(axios.defaults.adapter!),
+	{ threshold: 1000 },
+);
+
+// 3) Full resilience pipeline
+const resilient = retryAdapterEnhancer(cacheAndThrottle, { times: 2 });
+```
+
 ## API
 
 ### `cacheAdapterEnhancer`
 
+When to use: cache requests (GET by default) and optionally customize cache strategy/key generation.
+
 ```ts
-cacheAdapterEnhancer(adapter: AxiosRequestConfig['adapter'], options?: {
+cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestConfig['adapter']>, options?: {
 	cacheable?: (config: AxiosRequestConfig) => boolean | ICacheLike<any>;
 	keyGenerator?: (config: AxiosRequestConfig) => string;
 	defaultCache?: ICacheLike<AxiosPromise>;
@@ -83,14 +155,14 @@ Default behavior:
 
 - If `config.cache` is set, it is used as override
 - Otherwise GET requests are cached
-- Default cache store is `new Cache({ ttl: 5min, max: 100 })`
+- Default cache store is `new Cache({ ttl: 5 * 60 * 1000, max: 100 })`
 
 Common request options (module-augmented on `AxiosRequestConfig`):
 
 - `cache?: boolean | ICacheLike<any>`
 - `forceUpdate?: boolean`
 
-Example: enable cache for GET by default, but force a refresh per request:
+Example: enable cache for GET by default, but force refresh per request:
 
 ```ts
 await http.get('/users', { forceUpdate: true });
@@ -104,7 +176,7 @@ const adapter = cacheAdapterEnhancer(axios.defaults.adapter!, {
 });
 ```
 
-Example: cache GET + POST with a method-aware cache key:
+Example: cache GET + POST with a URL-only key (safe only when params/body do not affect response):
 
 ```ts
 const adapter = cacheAdapterEnhancer(axios.defaults.adapter!, {
@@ -117,8 +189,10 @@ const adapter = cacheAdapterEnhancer(axios.defaults.adapter!, {
 
 ### `throttleAdapterEnhancer`
 
+When to use: dedupe GET requests triggered repeatedly within a short interval.
+
 ```ts
-throttleAdapterEnhancer(adapter: AxiosRequestConfig['adapter'], options?: {
+throttleAdapterEnhancer(adapter: NonNullable<AxiosRequestConfig['adapter']>, options?: {
 	threshold?: number;
 	cache?: ICacheLike<{ timestamp: number; value?: AxiosPromise }>;
 }): AxiosAdapter
@@ -139,6 +213,8 @@ await http.get('/users', { threshold: 3000 });
 ```
 
 ### `retryAdapterEnhancer`
+
+When to use: retry transient failures without rewriting request logic.
 
 ```ts
 retryAdapterEnhancer(adapter: AxiosAdapter, options?: {
@@ -177,7 +253,7 @@ If your project has strict interop settings, enabling these can improve import e
 
 ## Logging
 
-Set `process.env.LOGGER_LEVEL=info` to enable internal info logging in development.
+Set `process.env.LOGGER_LEVEL=info` in Node-based development to enable internal info logging.
 
 ## Development
 
