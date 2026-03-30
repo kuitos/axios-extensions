@@ -214,6 +214,22 @@ describe('cacheAdapterEnhancer', () => {
 		expect(adapterCb.callCount).toBe(2);
 	});
 
+	it('cache adapter should mark cached responses with __fromCache only on cache hit', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const http = axios.create({
+			adapter: cacheAdapterEnhancer(mockedAdapter),
+		});
+
+		const firstResponse = await http.get('/users');
+		expect(Reflect.get(firstResponse, '__fromCache')).toBeUndefined();
+
+		const secondResponse = await http.get('/users');
+		expect(Reflect.get(secondResponse, '__fromCache')).toBe(true);
+		expect(adapterCb.callCount).toBe(1);
+	});
+
 	it('cache adapter should support custom cache key generator', async () => {
 
 		const adapterCb = spy();

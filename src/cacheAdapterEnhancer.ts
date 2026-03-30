@@ -17,6 +17,10 @@ declare module 'axios' {
 		forceUpdate?: boolean;
 		cache?: boolean | ICacheLike<any>;
 	}
+
+	interface AxiosResponse {
+		__fromCache?: boolean;
+	}
 }
 
 const FIVE_MINUTES = 1000 * 60 * 5;
@@ -78,7 +82,10 @@ export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestCo
 				console.info(`[axios-extensions] request cached by cache adapter --> url: ${index}`);
 			}
 
-			return responsePromise;
+			return responsePromise.then(response => ({
+				...response,
+				__fromCache: true,
+			}));
 		}
 
 		return resolvedAdapter(config);
