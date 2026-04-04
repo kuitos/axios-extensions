@@ -32,7 +32,7 @@ Source-of-truth is `src/`; `lib`/`esm`/`dist` are generated outputs.
 | Adapter resolution | `src/utils/resolveAdapter.ts` | Handles axios v1 adapter forms |
 | Cache contract checks | `src/utils/isCacheLike.ts`, `src/utils/deleteCacheEntry.ts` | Supports `delete` and legacy `del` |
 | Build pipeline | `package.json`, `vite.config.ts`, `tsconfig.types.json` | cjs -> esm -> umd -> umd-min |
-| CI and release | `.github/workflows/*.yml`, `package.json#release` | release tag + GitHub publish split |
+| CI and release | `.github/workflows/*.yml`, `.releaserc.json` | CI-on-master gates semantic-release auto publish |
 
 ## CODE MAP
 | Symbol | Type | Location | Role |
@@ -60,7 +60,7 @@ Source-of-truth is `src/`; `lib`/`esm`/`dist` are generated outputs.
 ## UNIQUE STYLES
 - Axios type augmentation is colocated inside enhancer files (`declare module 'axios'`).
 - Cache compatibility keeps both `delete` and `del` paths.
-- Release flow is two-step: version/tag (`np --no-publish`) then GitHub Action publish.
+- Release flow is CI-gated semantic-release: merges to `master` run CI first, then the release workflow publishes from the validated commit.
 
 ## COMMANDS
 ```bash
@@ -68,10 +68,9 @@ npm run lint
 npm test
 npm run build
 npm run ci
-npm run release
 ```
 
 ## NOTES
 - Keep `main`, `module`, and `types` entrypoints aligned with generated outputs.
 - CI validates on Node 20.x and 22.x (`.github/workflows/ci.yml`).
-- Publish workflow triggers on `v4.*` tags (`publish-latest.yml`).
+- Release workflow listens for successful `CI` runs on `master` and then executes `semantic-release` (`.github/workflows/release.yml`).
