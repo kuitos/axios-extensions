@@ -28,7 +28,6 @@
     "test:pure": "vitest run",
     "report": "vitest run --coverage --reporter=verbose",
     "prepublishOnly": "npm run build",
-    "release": "np --no-cleanup --yolo --no-publish",
     "ci": "npm run lint && npm run test",
     "prepare": "husky"
   },
@@ -48,7 +47,9 @@
     "axios": "^1.7.0",
     "eslint": "^9.0.0",
     "husky": "^9.0.0",
-    "np": "^10.0.0",
+    "semantic-release": "^24.0.0",
+    "@semantic-release/changelog": "^6.0.0",
+    "@semantic-release/git": "^10.0.0",
     "sinon": "^19.0.0",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.0.0",
