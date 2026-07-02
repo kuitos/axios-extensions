@@ -47,7 +47,7 @@
     "axios": "^1.7.0",
     "eslint": "^9.0.0",
     "husky": "^9.0.0",
-    "semantic-release": "^24.0.0",
+    "semantic-release": "^25.0.5",
     "@semantic-release/changelog": "^6.0.0",
     "@semantic-release/git": "^10.0.0",
     "sinon": "^19.0.0",
