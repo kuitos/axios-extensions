@@ -200,4 +200,50 @@ describe('throttleAdapterEnhancer', () => {
 			});
 		}
 	});
+
+	it('should isolate throttle entries by baseURL while deduping matching baseURL requests', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const http = axios.create({
+			adapter: throttleAdapterEnhancer(mockedAdapter, { threshold: 1000 }),
+		});
+
+		const [resA1, resA2, resB1, resB2] = await Promise.all([
+			http.get('/users', { baseURL: 'https://a.example' }),
+			http.get('/users', { baseURL: 'https://a.example' }),
+			http.get('/users', { baseURL: 'https://b.example' }),
+			http.get('/users', { baseURL: 'https://b.example' }),
+		]) as any[];
+
+		expect(adapterCb.callCount).toBe(2);
+		expect(resA1.baseURL).toBe('https://a.example');
+		expect(resA2.baseURL).toBe('https://a.example');
+		expect(resB1.baseURL).toBe('https://b.example');
+		expect(resB2.baseURL).toBe('https://b.example');
+	});
+
+	it('should isolate shared throttle cache across instances with different baseURLs', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const sharedCache = new Cache<RecordedCache>({ max: 10 });
+		const clientA = axios.create({
+			baseURL: 'https://a.example',
+			adapter: throttleAdapterEnhancer(mockedAdapter, { threshold: 1000, cache: sharedCache }),
+		});
+		const clientB = axios.create({
+			baseURL: 'https://b.example',
+			adapter: throttleAdapterEnhancer(mockedAdapter, { threshold: 1000, cache: sharedCache }),
+		});
+
+		const resA = await clientA.get('/users') as any;
+		const resB = await clientB.get('/users') as any;
+		const resA2 = await clientA.get('/users') as any;
+
+		expect(adapterCb.callCount).toBe(2);
+		expect(resA.baseURL).toBe('https://a.example');
+		expect(resB.baseURL).toBe('https://b.example');
+		expect(resA2.baseURL).toBe('https://a.example');
+	});
 });

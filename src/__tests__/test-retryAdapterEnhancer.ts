@@ -113,4 +113,39 @@ describe('retryAdapterEnhancer', () => {
 			});
 		}
 	});
+
+	it('should resolve adapter array and names via axios.getAdapter', async () => {
+
+		const originalGetAdapter = axios.getAdapter;
+		const defaultAdapters = axios.defaults.adapter!;
+		const spySuccess = spy();
+		const eventuallySuccess = createEventuallySuccessAdapter(spySuccess, 2);
+
+		const getAdapterSpy = spy((value: Parameters<typeof originalGetAdapter>[0]) => {
+			if (value === 'http') {
+				return createAlwaysFailAdapter(spyFail);
+			}
+			expect(value).toBe(defaultAdapters);
+			return eventuallySuccess;
+		});
+		const spyFail = spy();
+		axios.getAdapter = getAdapterSpy;
+
+		try {
+			const httpFromDefaults = axios.create({
+				adapter: retryAdapterEnhancer(defaultAdapters, { times: 2 }),
+			});
+			await httpFromDefaults.get('/test');
+			expect(spySuccess.callCount).toBe(2);
+
+			const httpFromName = axios.create({
+				adapter: retryAdapterEnhancer('http', { times: 1 }),
+			});
+			await expect(httpFromName.get('/fail')).rejects.toMatchObject({ url: '/fail' });
+			expect(spyFail.callCount).toBe(2);
+			expect(getAdapterSpy.callCount).toBe(2);
+		} finally {
+			axios.getAdapter = originalGetAdapter;
+		}
+	});
 });

@@ -64,8 +64,8 @@ export default function throttleAdapterEnhancer(adapter: NonNullable<AxiosReques
 
 	return config => {
 
-		const { url, method, params, paramsSerializer, threshold: thresholdPerRequest } = config;
-		const index = buildSortedURL(url, params, paramsSerializer);
+		const { method, threshold: thresholdPerRequest } = config;
+		const index = buildSortedURL(config);
 		const effectiveThreshold = thresholdPerRequest ?? threshold;
 
 		const now = Date.now();

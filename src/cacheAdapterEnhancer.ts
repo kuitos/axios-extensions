@@ -53,9 +53,9 @@ export default function cacheAdapterEnhancer(adapter: NonNullable<AxiosRequestCo
 
 		if (result) {
 
-			const { url, params, paramsSerializer, forceUpdate } = config;
+			const { forceUpdate } = config;
 			const cache: ICacheLike<AxiosPromise> = isCacheLike(result) ? result : defaultCache;
-			const index = keyGenerator ? keyGenerator(config) : buildSortedURL(url, params, paramsSerializer);
+			const index = keyGenerator ? keyGenerator(config) : buildSortedURL(config);
 
 			let responsePromise = cache.get(index);
 

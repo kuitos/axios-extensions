@@ -4,11 +4,26 @@
  * @since 2017-10-12
  */
 
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 
-export default function buildSortedURL(...args: any[]) {
-	const [url, params, paramsSerializer] = args;
-	const builtURL = axios.getUri({ url, params, paramsSerializer });
+// Use a dedicated Axios instance with empty defaults so global axios.defaults mutations do not affect request keys
+const cleanAxios = new axios.Axios({});
+
+export default function buildSortedURL(config: AxiosRequestConfig): string {
+	const {
+		url = '',
+		baseURL,
+		allowAbsoluteUrls,
+		params,
+		paramsSerializer,
+	} = config;
+	const builtURL = cleanAxios.getUri({
+		url,
+		baseURL,
+		allowAbsoluteUrls,
+		params,
+		paramsSerializer,
+	});
 
 	const [urlPath, queryString] = builtURL.split('?');
 
