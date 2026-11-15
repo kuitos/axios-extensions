@@ -217,7 +217,7 @@ await http.get('/users', { threshold: 3000 });
 When to use: retry transient failures without rewriting request logic.
 
 ```ts
-retryAdapterEnhancer(adapter: AxiosAdapter, options?: {
+retryAdapterEnhancer(adapter: NonNullable<AxiosRequestConfig['adapter']>, options?: {
 	times?: number;
 }): AxiosAdapter
 ```

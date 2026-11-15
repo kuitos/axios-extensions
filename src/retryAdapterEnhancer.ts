@@ -3,7 +3,8 @@
  * @since 2020-02-18
  */
 
-import { AxiosAdapter, AxiosResponse } from 'axios';
+import { AxiosAdapter, AxiosRequestConfig, AxiosResponse } from 'axios';
+import resolveAdapter from './utils/resolveAdapter';
 import shouldLogInfo from './utils/shouldLogInfo';
 
 declare module 'axios' {
@@ -16,8 +17,9 @@ export type Options = {
 	times?: number;
 };
 
-export default function retryAdapterEnhancer(adapter: AxiosAdapter, options: Options = {}): AxiosAdapter {
+export default function retryAdapterEnhancer(adapter: NonNullable<AxiosRequestConfig['adapter']>, options: Options = {}): AxiosAdapter {
 
+	const resolvedAdapter = resolveAdapter(adapter);
 	const { times = 2 } = options;
 
 	return async config => {
@@ -28,7 +30,7 @@ export default function retryAdapterEnhancer(adapter: AxiosAdapter, options: Opt
 		let count = 0;
 		const request = async (): Promise<AxiosResponse> => {
 			try {
-				return await adapter(config);
+				return await resolvedAdapter(config);
 			} catch (e) {
 				timeUp = retryTimes === count;
 				if (timeUp) {

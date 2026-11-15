@@ -245,4 +245,69 @@ describe('cacheAdapterEnhancer', () => {
 
 		expect(adapterCb.callCount).toBe(1);
 	});
+
+	it('should isolate cache entries by baseURL while reusing matching baseURL requests', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const http = axios.create({
+			adapter: cacheAdapterEnhancer(mockedAdapter),
+		});
+
+		const resA1 = await http.get('/users', { baseURL: 'https://a.example' }) as any;
+		const resB1 = await http.get('/users', { baseURL: 'https://b.example' }) as any;
+		const resA2 = await http.get('/users', { baseURL: 'https://a.example' }) as any;
+		const resB2 = await http.get('/users', { baseURL: 'https://b.example' }) as any;
+
+		expect(adapterCb.callCount).toBe(2);
+		expect(resA1.baseURL).toBe('https://a.example');
+		expect(resB1.baseURL).toBe('https://b.example');
+		expect(resA2.baseURL).toBe('https://a.example');
+		expect(resA2.__fromCache).toBe(true);
+		expect(resB2.baseURL).toBe('https://b.example');
+		expect(resB2.__fromCache).toBe(true);
+	});
+
+	it('should isolate shared defaultCache across instances with different baseURLs', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const sharedCache = new Cache<AxiosPromise>({ max: 100 });
+		const clientA = axios.create({
+			baseURL: 'https://a.example',
+			adapter: cacheAdapterEnhancer(mockedAdapter, { defaultCache: sharedCache }),
+		});
+		const clientB = axios.create({
+			baseURL: 'https://b.example',
+			adapter: cacheAdapterEnhancer(mockedAdapter, { defaultCache: sharedCache }),
+		});
+
+		const resA = await clientA.get('/users') as any;
+		const resB = await clientB.get('/users') as any;
+		const resA2 = await clientA.get('/users') as any;
+
+		expect(adapterCb.callCount).toBe(2);
+		expect(resA.baseURL).toBe('https://a.example');
+		expect(resB.baseURL).toBe('https://b.example');
+		expect(resB.__fromCache).toBeUndefined();
+		expect(resA2.__fromCache).toBe(true);
+	});
+
+	it('should respect allowAbsoluteUrls and paramsSerializer in default cache key', async () => {
+
+		const adapterCb = spy();
+		const mockedAdapter = genMockAdapter(adapterCb);
+		const http = axios.create({
+			baseURL: 'https://a.example',
+			adapter: cacheAdapterEnhancer(mockedAdapter),
+		});
+
+		await http.get('https://other.example/users', { allowAbsoluteUrls: true });
+		await http.get('https://other.example/users', { allowAbsoluteUrls: false });
+		expect(adapterCb.callCount).toBe(2);
+
+		await http.get('/users', { params: { a: [1, 2] }, paramsSerializer: { indexes: null } });
+		await http.get('/users', { params: { a: [1, 2] }, paramsSerializer: { indexes: true } });
+		expect(adapterCb.callCount).toBe(4);
+	});
 });
